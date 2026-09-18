@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Spacetime Forge" />
+<meta name="theme-color" content="#f4f6f9" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<link rel="manifest" href="manifest.json" />
+<link rel="stylesheet" href="css/thema.css" />
+<title>Spacetime Forge</title>
+</head>
+<body>
+
+<div id="app">
+  <nav id="nav">
+    <div class="merk">
+      <h1>Spacetime <span>Forge</span></h1>
+      <p>Speciale relativiteit, visueel</p>
+    </div>
+    <div id="nav-lijst"></div>
+  </nav>
+  <main id="inhoud">
+    <header>
+      <h2 id="titel">Laden…</h2>
+      <p id="onderschrift"></p>
+    </header>
+    <div id="module"></div>
+  </main>
+</div>
+
+<script type="module">
+import { registreer, moduleLijst } from './js/register.js';
+
+// --- Modules aanmelden ---------------------------------------------------
+// Elke module is een los bestand dat een render(doel) exporteert.
+// Modules die er nog niet zijn, staan als 'komt nog' in het menu.
+const GROEPEN = [
+  {
+    titel: 'Fundament',
+    items: [
+      { id: 'welkom', naam: 'Welkom', pad: './js/modules/welkom.js' },
+    ],
+  },
+  {
+    titel: 'Ruimtetijd',
+    items: [
+      { id: 'minkowski-pro', naam: 'Minkowski-diagram Pro', pad: null },
+      { id: 'lichtklok',     naam: 'Lichtklok-afleiding',   pad: null },
+      { id: 'gelijktijdig',  naam: 'Gelijktijdigheid',      pad: null },
+      { id: 'minkowski',     naam: 'Minkowski-diagram',     pad: null },
+      { id: 'lichtkegel',    naam: 'Lichtkegel',            pad: null },
+    ],
+  },
+  {
+    titel: 'Verdieping',
+    items: [
+      { id: 'tweeling', naam: 'Tweelingparadox', pad: null },
+      { id: 'epstein',  naam: 'Epstein-cirkel',  pad: null },
+    ],
+  },
+];
+
+for (const groep of GROEPEN) {
+  for (const item of groep.items) registreer(item);
+}
+
+// --- Navigatie opbouwen --------------------------------------------------
+const navLijst = document.getElementById('nav-lijst');
+const knoppen = new Map();
+
+for (const groep of GROEPEN) {
+  const g = document.createElement('div');
+  g.className = 'groep';
+  const t = document.createElement('div');
+  t.className = 'groep-titel';
+  t.textContent = groep.titel;
+  g.appendChild(t);
+
+  for (const item of groep.items) {
+    const knop = document.createElement('button');
+    knop.textContent = item.naam;
+    knop.disabled = !item.pad;
+    if (item.pad) knop.addEventListener('click', () => ga(item.id));
+    g.appendChild(knop);
+    knoppen.set(item.id, knop);
+  }
+  navLijst.appendChild(g);
+}
+
+// --- Module laden --------------------------------------------------------
+const doel = document.getElementById('module');
+const titelEl = document.getElementById('titel');
+const onderEl = document.getElementById('onderschrift');
+
+async function ga(id) {
+  const item = moduleLijst().find((m) => m.id === id);
+  if (!item || !item.pad) return;
+
+  for (const [k, knop] of knoppen) knop.classList.toggle('actief', k === id);
+
+  doel.innerHTML = '';
+  titelEl.textContent = item.naam;
+  onderEl.textContent = '';
+
+  try {
+    const mod = await import(item.pad);
+    if (mod.titel) titelEl.textContent = mod.titel;
+    if (mod.onderschrift) onderEl.textContent = mod.onderschrift;
+    mod.render(doel);
+    location.hash = id;
+  } catch (fout) {
+    doel.innerHTML =
+      '<div class="paneel" style="border-color:#e0b4b0;background:#fdf2f1">' +
+      '<h3 style="color:#b3261e">Module kon niet laden</h3>' +
+      '<div style="font-family:ui-monospace,monospace;font-size:13px;white-space:pre-wrap">' +
+      String(fout && fout.message ? fout.message : fout) + '</div></div>';
+    console.error(fout);
+  }
+}
+
+// Startmodule: uit de URL, anders welkom
+const start = location.hash.replace('#', '') || 'welkom';
+ga(moduleLijst().some((m) => m.id === start && m.pad) ? start : 'welkom');
+
+// --- Service worker (offline) -------------------------------------------
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch((e) => {
+      console.warn('Service worker niet geregistreerd:', e);
+    });
+  });
+}
+</script>
+</body>
+</html>
