@@ -1,0 +1,205 @@
+/* thema.css — één lichte huisstijl voor de hele app.
+   Ontworpen voor iPad Pro 12.9" in landschap, PWA-modus: 1590 x 1160 CSS-px.
+   Alle maten in rem/px binnen dat kader; diagrammen schalen mee via viewBox. */
+
+:root {
+  /* --- Basis --- */
+  --bg:          #f4f6f9;   /* paginaachtergrond */
+  --kaart:       #ffffff;   /* panelen en diagramvlak */
+  --kaart-2:     #fafbfd;   /* subtiel afwijkend paneel */
+  --rand:        #dde3ec;
+  --rand-sterk:  #c3ccd9;
+  --tekst:       #16202e;   /* 13.4:1 op --bg */
+  --tekst-zacht: #566374;   /* 5.4:1 op --bg  */
+  --tekst-licht: #7d8794;   /* alleen voor grote tekst */
+
+  /* --- Semantische rollen (contrast >= 4.5:1 op --kaart) --- */
+  --perron:      #1b2733;   /* ruststelsel: assen, tikken */
+  --trein:       #8a5a00;   /* bewegend kader: assen, tikken */
+  --trein-vlak:  #f5edda;   /* vulling in trein-kleur */
+  --licht:       #8892a0;   /* lichtkegel, hulplijnen */
+  --gebeurtenis: #b3261e;   /* events, nu-lijn ruststelsel */
+  --eigentijd:   #1c6b43;   /* eigen tijd, tau */
+  --accent:      #6b3fa0;   /* bijzondere markeringen */
+  --accent-zacht:#f0e9f8;
+  --blauw:       #1f5fa8;   /* interactie, knoppen */
+  --blauw-zacht: #e8f0fa;
+
+  /* --- Maten --- */
+  --nav-breedte: 248px;
+  --radius:      12px;
+  --radius-klein: 8px;
+  --schaduw:     0 1px 2px rgba(22,32,46,.06), 0 4px 14px rgba(22,32,46,.05);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0; padding: 0;
+  height: 100%; overflow: hidden;           /* de app scrollt niet zelf */
+  background: var(--bg); color: var(--tekst);
+  font-family: -apple-system, system-ui, 'Segoe UI', sans-serif;
+  font-size: 16px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;                /* geen rubber-band op iOS */
+}
+
+/* ============ Schil ============ */
+#app {
+  display: flex;
+  height: 100vh; height: 100dvh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+           env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* ---- Navigatie links ---- */
+#nav {
+  width: var(--nav-breedte); flex-shrink: 0;
+  background: var(--kaart); border-right: 1px solid var(--rand);
+  display: flex; flex-direction: column;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+#nav .merk {
+  padding: 18px 18px 14px; border-bottom: 1px solid var(--rand);
+}
+#nav .merk h1 {
+  margin: 0; font-size: 19px; font-weight: 650; letter-spacing: -0.025em;
+}
+#nav .merk h1 span { color: var(--blauw); }
+#nav .merk p {
+  margin: 3px 0 0; font-size: 12px; color: var(--tekst-zacht);
+}
+#nav .groep { padding: 14px 10px 4px; }
+#nav .groep-titel {
+  font-size: 11px; font-weight: 650; text-transform: uppercase;
+  letter-spacing: 0.07em; color: var(--tekst-licht);
+  padding: 0 8px 6px;
+}
+#nav button {
+  display: block; width: 100%; text-align: left;
+  padding: 9px 12px; margin-bottom: 2px;
+  background: none; border: none; border-radius: var(--radius-klein);
+  font: inherit; font-size: 14px; color: var(--tekst);
+  cursor: pointer; transition: background .12s;
+}
+#nav button:hover { background: var(--bg); }
+#nav button.actief {
+  background: var(--blauw-zacht); color: var(--blauw); font-weight: 600;
+}
+#nav button:disabled { color: var(--tekst-licht); cursor: default; }
+#nav button:disabled::after {
+  content: ' — volgt'; font-size: 11px; color: var(--tekst-licht);
+}
+
+/* ---- Inhoudsgebied ---- */
+#inhoud {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 20px 24px 28px;
+}
+#inhoud > header { margin-bottom: 16px; flex-shrink: 0; }
+#inhoud > header h2 {
+  margin: 0; font-size: 26px; font-weight: 650; letter-spacing: -0.03em;
+}
+#inhoud > header p {
+  margin: 5px 0 0; color: var(--tekst-zacht); font-size: 14.5px;
+  max-width: 78ch;
+}
+
+/* ============ Bouwstenen ============ */
+.paneel {
+  background: var(--kaart); border: 1px solid var(--rand);
+  border-radius: var(--radius); box-shadow: var(--schaduw);
+  padding: 16px 18px; margin-bottom: 14px;
+}
+.paneel > h3 {
+  margin: 0 0 10px; font-size: 13px; font-weight: 650;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--tekst-zacht);
+}
+
+.diagram-vak {
+  background: var(--kaart); border: 1px solid var(--rand);
+  border-radius: var(--radius); box-shadow: var(--schaduw);
+  overflow: hidden; margin-bottom: 14px; position: relative;
+}
+.diagram-vak svg { display: block; width: 100%; height: auto; touch-action: none; }
+
+.regelaars {
+  display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end;
+}
+.regelaar { flex: 1 1 260px; min-width: 200px; }
+.regelaar label {
+  display: block; font-size: 13px; color: var(--tekst-zacht);
+  margin-bottom: 4px;
+}
+.regelaar label b {
+  color: var(--tekst); font-variant-numeric: tabular-nums;
+  font-size: 15px; font-weight: 600;
+}
+input[type=range] {
+  width: 100%; height: 30px; margin: 0;
+  -webkit-appearance: none; background: none;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  height: 5px; border-radius: 3px; background: var(--rand-sterk);
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 28px; height: 28px; margin-top: -11px;
+  border-radius: 50%; background: var(--blauw);
+  border: 3px solid var(--kaart); box-shadow: 0 1px 4px rgba(0,0,0,.25);
+}
+
+.knoppen { display: flex; gap: 8px; flex-wrap: wrap; }
+.knop {
+  padding: 8px 14px; font: inherit; font-size: 13.5px; font-weight: 550;
+  background: var(--kaart); color: var(--tekst);
+  border: 1px solid var(--rand-sterk); border-radius: 999px;
+  cursor: pointer; transition: all .12s;
+}
+.knop:hover { border-color: var(--blauw); color: var(--blauw); }
+.knop.aan {
+  background: var(--blauw); color: #fff; border-color: var(--blauw);
+}
+
+.waarden { display: flex; gap: 10px; flex-wrap: wrap; }
+.waarde-kaart {
+  flex: 1 1 130px; background: var(--kaart-2);
+  border: 1px solid var(--rand); border-radius: var(--radius-klein);
+  padding: 9px 12px;
+}
+.waarde-kaart .k {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--tekst-zacht); margin-bottom: 2px;
+}
+.waarde-kaart .v {
+  font-size: 19px; font-weight: 650; letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.uitleg {
+  background: var(--blauw-zacht); border: 1px solid #cfe0f2;
+  border-radius: var(--radius); padding: 13px 16px;
+  font-size: 14px; line-height: 1.65; color: #14324f;
+  margin-bottom: 14px;
+}
+.uitleg b { color: var(--blauw); }
+.bron {
+  font-size: 12px; color: var(--tekst-zacht); font-style: italic;
+  margin-top: 8px;
+}
+
+.zoom-overlay {
+  position: absolute; top: 10px; left: 10px;
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.92); border: 1px solid var(--rand);
+  border-radius: 999px; padding: 4px 10px;
+  font-size: 12px; color: var(--tekst-zacht);
+  font-variant-numeric: tabular-nums;
+}
+.zoom-overlay button {
+  background: none; border: none; color: var(--blauw);
+  font: inherit; font-size: 12px; cursor: pointer;
+  text-decoration: underline; padding: 0;
+}
