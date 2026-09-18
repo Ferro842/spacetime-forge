@@ -55,6 +55,7 @@ export function maakSchaal({ breedte, hoogte, xBereik, yBereik, marge }) {
  */
 export function maakLabelPlaatser({ minAfstand = 4, tekenBreedteFactor = 0.58 } = {}) {
   const wachtrij = [];
+  const blokkades = [];   // vakken die al bezet zijn door lijnen, assen, stippen
 
   function schatBreedte(tekst, grootte) {
     return tekst.length * grootte * tekenBreedteFactor;
@@ -83,6 +84,27 @@ export function maakLabelPlaatser({ minAfstand = 4, tekenBreedteFactor = 0.58 } 
 
   return {
     /**
+     * Markeer een rechthoek als bezet, zodat labels er niet overheen komen.
+     * Gebruik dit voor assen, wereldlijnen en gebeurtenis-stippen.
+     * Voor een lijn: geef een dunne rechthoek langs de lijn.
+     */
+    blokkeer({ links, boven, breedte, hoogte }) {
+      blokkades.push({
+        links, rechts: links + breedte,
+        boven, onder: boven + hoogte,
+      });
+    },
+
+    /** Markeer een horizontale of verticale lijn als bezet. */
+    blokkeerLijn({ x1, y1, x2, y2, dikte = 14 }) {
+      const h = dikte / 2;
+      blokkades.push({
+        links: Math.min(x1, x2) - h, rechts: Math.max(x1, x2) + h,
+        boven: Math.min(y1, y2) - h, onder: Math.max(y1, y2) + h,
+      });
+    },
+
+    /**
      * Zet een label in de wachtrij. Plaatsing gebeurt pas bij oplossen(),
      * zodat labels met hoge prioriteit altijd voorrang krijgen ongeacht
      * de volgorde waarin ze zijn toegevoegd.
@@ -103,7 +125,7 @@ export function maakLabelPlaatser({ minAfstand = 4, tekenBreedteFactor = 0.58 } 
      */
     oplossen() {
       const gesorteerd = [...wachtrij].sort((a, b) => b.prioriteit - a.prioriteit);
-      const bezet = [];
+      const bezet = [...blokkades];
       const uitkomst = new Map();
 
       for (const spec of gesorteerd) {
