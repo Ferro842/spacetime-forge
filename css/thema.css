@@ -129,7 +129,7 @@ html, body {
 #module > .fout        { grid-column: 1 / -1; grid-row: 1 / -1; align-self: start; }
 
 .zijkolom {
-  display: flex; flex-direction: column; gap: 12px;
+  display: flex; flex-direction: column; gap: 10px;
   /* Past alles bij de doelmaat, maar liever een kolom die zelf schuift
      dan tekst die onzichtbaar wegvalt. */
   overflow-y: auto; -webkit-overflow-scrolling: touch;
