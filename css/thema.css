@@ -315,6 +315,18 @@ input[type=range]::-webkit-slider-thumb {
 }
 .formule[open] > summary::after { content: '\2212'; }
 .formule[open] > summary { border-bottom: 1px solid var(--rand); }
+/* Genummerde stap in een afleiding: badge plus de formule zelf */
+.stap-nr {
+  flex: none; width: 19px; height: 19px; border-radius: 50%;
+  background: var(--rand); color: var(--tekst-zacht);
+  font-size: 11px; font-weight: 700; margin-right: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.formule[open] > summary .stap-nr { background: var(--blauw); color: #fff; }
+.formule > summary code {
+  font: inherit; font-size: 12.5px; font-weight: 600; color: var(--blauw);
+  font-variant-numeric: tabular-nums;
+}
 .formule-inhoud { padding: 8px 11px 10px; }
 .formule-regel {
   font-size: 13.5px; font-weight: 600; color: var(--blauw);

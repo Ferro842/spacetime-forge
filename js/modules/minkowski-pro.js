@@ -36,7 +36,17 @@ function ladder(spec, plekken) {
     return links >= 3 && links + b <= BREEDTE - 3 &&
            y - spec.grootte * 0.8 >= 3 && y + spec.grootte * 0.25 <= HOOGTE - 3;
   });
-  return uit.length ? uit : [[0, 0]];
+  if (uit.length) return uit;
+  // Niets past: schuif het label dan in elk geval de viewBox in, want half
+  // buiten beeld is het onleesbaar zonder dat de plaatser dat merkt.
+  const b = schatBreedte(spec.tekst, spec.grootte);
+  let links = spec.x;
+  if (spec.anker === 'middle') links -= b / 2;
+  else if (spec.anker === 'end') links -= b;
+  let dx = 0;
+  if (links < 3) dx = 3 - links;
+  else if (links + b > BREEDTE - 3) dx = BREEDTE - 3 - b - links;
+  return [[dx, 0]];
 }
 
 export function render(doel) {

@@ -53,7 +53,17 @@ function binnenBeeld(spec, dx, dy) {
  */
 function ladder(spec, plekken) {
   const uit = plekken.filter(function (p) { return binnenBeeld(spec, p[0], p[1]); });
-  return uit.length ? uit : [[0, 0]];
+  if (uit.length) return uit;
+  // Niets past: schuif het label dan in elk geval de viewBox in, want half
+  // buiten beeld is het onleesbaar zonder dat de plaatser dat merkt.
+  const b = schatBreedte(spec.tekst, spec.grootte);
+  let links = spec.x;
+  if (spec.anker === 'middle') links -= b / 2;
+  else if (spec.anker === 'end') links -= b;
+  let dx = 0;
+  if (links < 3) dx = 3 - links;
+  else if (links + b > BREEDTE - 3) dx = BREEDTE - 3 - b - links;
+  return [[dx, 0]];
 }
 
 export function render(doel) {
