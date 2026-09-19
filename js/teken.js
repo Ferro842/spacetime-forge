@@ -58,7 +58,11 @@ export function maakLabelPlaatser({ minAfstand = 4, tekenBreedteFactor = 0.58 } 
   const blokkades = [];   // vakken die al bezet zijn door lijnen, assen, stippen
 
   function schatBreedte(tekst, grootte) {
-    return tekst.length * grootte * tekenBreedteFactor;
+    // Hoofdletters zijn ruim een vijfde breder dan het gemiddelde teken.
+    // Zonder die correctie denkt de plaatser dat kopjes naast elkaar passen
+    // terwijl ze in het scherm over elkaar heen lopen.
+    const hoofdletters = (tekst.match(/[A-Z\u00c0-\u00de]/g) || []).length;
+    return (tekst.length + hoofdletters * 0.22) * grootte * tekenBreedteFactor;
   }
 
   function vakVan(spec, dx, dy) {

@@ -134,7 +134,8 @@ html, body {
      dan tekst die onzichtbaar wegvalt. */
   overflow-y: auto; -webkit-overflow-scrolling: touch;
 }
-.zijkolom > * { margin-bottom: 0; flex-shrink: 0; }
+/* De kolom regelt de tussenruimte zelf met gap */
+.zijkolom > * { margin: 0; flex-shrink: 0; }
 
 
 /* ============ Bouwstenen ============ */
@@ -161,7 +162,7 @@ html, body {
 }
 
 .regelaars {
-  display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end;
+  display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end;
 }
 .regelaar { flex: 1 1 260px; min-width: 200px; }
 .regelaar label {
@@ -196,6 +197,10 @@ input[type=range]::-webkit-slider-thumb {
 .knop.aan {
   background: var(--blauw); color: #fff; border-color: var(--blauw);
 }
+.knop:disabled {
+  opacity: .45; cursor: default;
+}
+.knop:disabled:hover { border-color: var(--rand-sterk); color: var(--tekst); }
 
 .waarden { display: flex; gap: 10px; flex-wrap: wrap; }
 .waarde-kaart {
