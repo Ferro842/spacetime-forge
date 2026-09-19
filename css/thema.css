@@ -136,16 +136,6 @@ html, body {
 }
 .zijkolom > * { margin-bottom: 0; flex-shrink: 0; }
 
-/* Smaller dan het doelscherm — bijvoorbeeld dezelfde PWA op een telefoon —
-   past niets naast elkaar. Dan alles onder elkaar, en daar mag wel gescrold
-   worden: dat is beter dan een diagram dat tot niets in elkaar klapt. */
-@media (max-width: 1080px) {
-  #inhoud { overflow-y: auto; }
-  #module { display: flex; flex-direction: column; flex: 0 0 auto; }
-  #module > .diagram-vak { min-height: 0; }
-  .diagram-vak svg { height: auto; }
-  .zijkolom { overflow: visible; }
-}
 
 /* ============ Bouwstenen ============ */
 .paneel {
