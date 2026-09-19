@@ -266,6 +266,21 @@ input[type=range]::-webkit-slider-thumb {
   margin-right: 6px; vertical-align: 1px;
 }
 
+/* Boekhouding: regels met een naam links en een getal rechts */
+.boekhouding { margin-top: 10px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.boekhouding > div {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 3px 0; border-bottom: 1px solid var(--rand);
+}
+.boekhouding > div > span { color: var(--tekst-zacht); }
+.boekhouding > div > b { margin-left: auto; font-weight: 650; }
+.boekhouding .sprong > span, .boekhouding .sprong > b { color: var(--accent); }
+.boekhouding .som > b { color: var(--tekst); }
+.boekhouding > div:last-child { border-bottom: none; }
+.duiding {
+  margin: 8px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--tekst-zacht);
+}
+
 .uitleg {
   background: var(--blauw-zacht); border: 1px solid #cfe0f2;
   border-radius: var(--radius); padding: 10px 16px;
