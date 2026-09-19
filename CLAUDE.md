@@ -88,24 +88,67 @@ formule nodig is, hoort er een zichtbare tegenhanger bij.
 
 ## Modules
 
-Klaar: welkom, lichtkegel, epstein.
+De vijf modules van de oorspronkelijke bouwlijst zijn af; de staaf in de
+loods kwam er later bij. Negen in totaal, in `index.html` verdeeld over drie
+groepen. Hieronder in diezelfde volgorde, met wat er in zit, zodat je niet
+elk bestand hoeft te openen.
 
-Nog te bouwen, in deze volgorde:
+**Fundament**
 
-1. **Minkowski-diagram Pro** — bestaat al als React-component in de oude
-   repo `relativity-toolkit` (`react_html/gelijktijdigheid_volledig.html`).
-   Perron/trein omkeerbaar, ijk-hyperbolen, pinch-zoom, klikbare formules
-   met stap-voor-stap afleidingen.
-2. **Lichtklok-afleiding** — idem, `react_html/lichtklok_driehoek.html`.
-   Pythagoras naar Δt, horizontale lichtklok naar L, de twee-rulers-figuur
-   uit Einsteins boek, en de ijk-hyperbolen.
-3. **Gelijktijdigheid** — trein met lichtflits, klokken die uit de pas
-   lopen, het inhaalmoment waarop de perronklok de achterklok voorbijstreeft.
-4. **Minkowski-diagram basis** — vrije worldlines, keuze van referentiekader.
-5. **Tweelingparadox** — met een geanimeerde gelijktijdigheidslijn die bij
-   de omkeer doorslaat, zodat zichtbaar wordt dat er op aarde tijd
-   "voorbijspringt" die de reiziger niet meemaakt. Dit is het belangrijkste
-   nieuwe element van de hele app.
+- **Welkom** (`welkom.js`) — één wereldlijn, één schuif, de eerste kennismaking
+  met tijdsdilatatie en de nu-lijn.
+
+**Ruimtetijd**
+
+- **Minkowski-diagram Pro** (`minkowski-pro.js`) — beide assenstelsels tegelijk,
+  perron/trein omkeerbaar, ijk-hyperbolen, pinch-zoom en pannen, klikbare
+  formules met stap-voor-stap afleidingen.
+- **Lichtklok-afleiding** (`lichtklok.js`) — vier tabbladen: Pythagoras naar Δt,
+  de horizontale lichtklok naar L, de twee-rulers-figuur uit Einsteins boek, en
+  de ijk-hyperbolen.
+- **Gelijktijdigheid** (`gelijktijdigheid.js`) — de trein met de lichtflits, in
+  drie banden. Aankomsten kleuren mee met wie er al langs is, twee tikreeksen op
+  de ct′-as (rond getal van de klok, en dezelfde hoogte als de perrontik), de
+  x′-as met afleeslijnen, het inhaalmoment, ijk-hyperbolen, een groot beeld en
+  negen vragen. De zwaarste module van de app.
+- **Minkowski-diagram basis** (`minkowski.js`) — twee tot vier vrije objecten met
+  eigen naam en snelheid, keuze van referentiekader, eigen-tijdstikken en een
+  tabel met de snelheden in dat kader.
+- **Lichtkegel** (`lichtkegel.js`) — sleepbare gebeurtenis, interval en soort,
+  plus de laag **Telegraaf**: een vraag sneller dan het licht heen en een
+  antwoord dat ogenblikkelijk is in het kader van het relais, en dus vóór de
+  vraag aankomt zodra β > ct/x.
+
+**Verdieping**
+
+- **Tweelingparadox** (`tweeling.js`) — de gelijktijdigheidslijn die bij de
+  omkeer doorslaat, met het overgeslagen stuk aardtijd in kleur. Daarnaast de
+  lichtsignalen zelf (lagen *Aarde seint* en *Schip seint*): wat je zíet springt
+  nergens, en telt toch op tot dezelfde eindstand. Daar zit ook de asymmetrie:
+  de aarde ziet de omkeer pas op t = T(1+β).
+- **Staaf in de loods** (`loods.js`) — de ladderparadox. Toneel en
+  Minkowski-diagram in een omkeerbaar kader, deuren die even dichtklappen, de
+  twee volgordes naast elkaar met hun verschil γ·β·D, en een lichtsignaal dat
+  laat zien waarom een star lichaam niet kan bestaan. Tijd én lengte in meters,
+  zodat licht onder 45° loopt.
+- **Epstein-cirkel** (`epstein.js`) — de cirkel waarin ruimte en tijd samen
+  altijd c opleveren.
+
+### Ideeën die nog openstaan
+
+Niet gekozen, alleen genoteerd:
+
+1. **Epstein volledig** — zijn centrale beeld helemaal uitspelen: één draaibare
+   pijl van vaste lengte, en de tweelingparadox nog eens in Epstein-coördinaten,
+   waar het verschil een booglengte wordt. Wel expliciet erbij zeggen waar het
+   beeld ophoudt te kloppen: Epstein-diagrammen geven eigen tijd goed en
+   gelijktijdigheid niet.
+2. **Snelheden tellen niet op, hoeken wel** — drie raketten van elk 0,6c, en
+   ernaast het diagram waarin elke stap dezelfde hyperbolische hoek toevoegt.
+   Dat verklaart meteen de ijk-hyperbolen uit Pro.
+3. **De plank over de put** en **de kever met de klinknagel** — mooi, maar de
+   oplossing hangt volledig op het vervormen van het voorwerp. Dan gaat het over
+   materiaalgedrag in plaats van relativiteit.
 
 ## Verwachtingen bij het werken
 
