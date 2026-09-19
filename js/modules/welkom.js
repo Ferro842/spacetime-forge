@@ -8,21 +8,26 @@ export const onderschrift =
   'Een werkbank voor de speciale relativiteitstheorie. Gebouwd voor één scherm, ' +
   'zodat elk diagram precies past en niets overlapt.';
 
-const BREEDTE = 1240;
-const HOOGTE = 560;
+// Maat van het diagramvak op het doelscherm: ongeveer 940 x 935 px.
+// De viewBox volgt die verhouding, zodat er geen strook leeg blijft.
+const BREEDTE = 960;
+const HOOGTE = 940;
+const MARGE = { boven: 34, onder: 42, links: 58, rechts: 58 };
 
 export function render(doel) {
   let beta = 0.6;
   let toonNu = true;
 
-  const uitleg = document.createElement('div');
+  const uitleg = document.createElement('details');
   uitleg.className = 'uitleg';
+  uitleg.open = true;
   uitleg.innerHTML =
-    '<b>Het fundament staat.</b> Dit diagram gebruikt dezelfde bouwstenen als ' +
-    'alle komende modules: één schaalobject dat natuurkundige co\u00f6rdinaten omzet ' +
-    'naar het scherm, en een labelplaatser die botsende teksten opschuift, om ' +
-    'assen heen leidt, of weglaat als het echt te druk wordt. Sleep aan de ' +
-    'snelheid: de trein-assen kantelen naar elkaar toe, de lichtkegel blijft staan.';
+    '<summary>Het fundament staat</summary>' +
+    '<p>Dit diagram gebruikt de bouwstenen van alle komende modules: één ' +
+    'schaalobject dat natuurkundige co\u00f6rdinaten omzet naar het scherm, en een ' +
+    'labelplaatser die botsende teksten opschuift, om assen heen leidt, of ' +
+    'weglaat als het te druk wordt. Sleep aan de snelheid: de trein-assen ' +
+    'kantelen naar elkaar toe, het licht blijft onder 45\u00b0 staan.</p>';
   doel.appendChild(uitleg);
 
   const vak = document.createElement('div');
@@ -35,6 +40,11 @@ export function render(doel) {
   });
   vak.appendChild(svg);
   doel.appendChild(vak);
+
+  // Alles wat geen diagram is, staat rechts onder elkaar in de zijkolom
+  const zijkolom = document.createElement('div');
+  zijkolom.className = 'zijkolom';
+  doel.appendChild(zijkolom);
 
   const paneel = document.createElement('div');
   paneel.className = 'paneel';
@@ -49,29 +59,33 @@ export function render(doel) {
     '    <button class="knop aan" id="nu-knop">Gelijktijdigheidslijnen</button>' +
     '  </div>' +
     '</div>';
-  doel.appendChild(paneel);
+  zijkolom.appendChild(paneel);
 
   const waarden = document.createElement('div');
   waarden.className = 'waarden';
-  waarden.style.marginBottom = '14px';
-  doel.appendChild(waarden);
+  zijkolom.appendChild(waarden);
 
   const bron = document.createElement('div');
   bron.className = 'bron';
   bron.textContent =
     'Opzet naar het Minkowski-diagram zoals besproken in Takeuchi, ' +
     '"An Illustrated Guide to Relativity", hoofdstuk 4 \u2014 in eigen woorden weergegeven.';
-  doel.appendChild(bron);
+  zijkolom.appendChild(bron);
 
   function teken() {
     while (svg.firstChild) svg.removeChild(svg.firstChild);
 
     const g = F.gamma(beta);
-    const xMax = 2.4, tMax = 1.25;
+    // Even veel pixels per eenheid x als per eenheid ct: daardoor lopen de
+    // lichtlijnen precies onder 45°, zoals het in een Minkowski-diagram hoort.
+    const xMax = 2.4;
+    const tekenB = BREEDTE - MARGE.links - MARGE.rechts;
+    const tekenH = HOOGTE - MARGE.boven - MARGE.onder;
+    const tMax = xMax * tekenH / tekenB;
     const schaal = T.maakSchaal({
       breedte: BREEDTE, hoogte: HOOGTE,
       xBereik: [-xMax, xMax], yBereik: [-tMax, tMax],
-      marge: { boven: 30, onder: 34, links: 54, rechts: 54 },
+      marge: MARGE,
     });
 
     const labels = T.maakLabelPlaatser();
@@ -208,16 +222,25 @@ export function render(doel) {
         const tBoven = schaal.vanY(labelY + dy - 11) + 20 / pxPerT;
         return schaal.naarX(tBoven / beta) + 12 - labelX;
       }
+      // Een plek telt alleen mee als het hele label binnen de viewBox valt;
+      // wat erbuiten valt is net zo onleesbaar als weggelaten.
+      const uitwijk = [];
+      function bied(dx, dy) {
+        const links = labelX + dx;
+        if (links < 6 || links + labelBreed > BREEDTE - 6) return;
+        uitwijk.push([dx, dy]);
+      }
       // Eerst alles op de hoogte van de stip zelf — daar hoort het label bij —
       // en pas als niets daar past trapsgewijs langs de as omhoog.
-      const uitwijk = [
-        [0, 0], [rechtsVanAs(0), 0], [linksVanAs(0), 0], [voorbijXAs(0), 0],
-      ];
+      bied(0, 0);
+      bied(rechtsVanAs(0), 0);
+      bied(linksVanAs(0), 0);
+      bied(voorbijXAs(0), 0);
       for (let n = 1; n <= 4; n++) {
         const dy = -20 * n;
-        uitwijk.push([rechtsVanAs(dy), dy]);   // rechts van de ct'-as
-        uitwijk.push([linksVanAs(dy), dy]);    // links ervan
-        uitwijk.push([voorbijXAs(dy), dy]);    // voorbij de x'-as
+        bied(rechtsVanAs(dy), dy);   // rechts van de ct'-as
+        bied(linksVanAs(dy), dy);    // links ervan
+        bied(voorbijXAs(dy), dy);    // voorbij de x'-as
       }
       labels.voegToe({
         tekst: labelTekst, x: labelX, y: labelY,

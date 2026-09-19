@@ -267,6 +267,26 @@ export function gebeurtenis(schaal, { t, x, kleur, straal = 7, vorm = 'cirkel' }
 }
 
 /**
+ * Rekent een scherm-coördinaat (clientX/clientY) om naar viewBox-eenheden.
+ *
+ * De SVG vult zijn vak, dus de verhouding van het vak is zelden precies die
+ * van de viewBox. Met preserveAspectRatio="xMidYMid meet" schaalt de tekening
+ * dan gelijkmatig en blijft er aan twee kanten een rand over. Zonder die rand
+ * mee te rekenen loopt een sleeppunt scheef met de vinger mee.
+ */
+export function naarViewBox(svgNode, clientX, clientY, breedte, hoogte) {
+  const rect = svgNode.getBoundingClientRect();
+  if (!rect.width || !rect.height) return null;
+  const factor = Math.min(rect.width / breedte, rect.height / hoogte);
+  const randX = (rect.width - breedte * factor) / 2;
+  const randY = (rect.height - hoogte * factor) / 2;
+  return {
+    x: (clientX - rect.left - randX) / factor,
+    y: (clientY - rect.top - randY) / factor,
+  };
+}
+
+/**
  * Koppelt pinch-zoom en pannen aan een SVG.
  * Gebruikt addEventListener met passive:false, want React's eigen
  * touch-events zijn soms passive en dan blokkeert preventDefault()

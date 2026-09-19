@@ -12,21 +12,26 @@ export const onderschrift =
   'Een ander mentaal model: je beweegt altijd met de lichtsnelheid door ruimtetijd. ' +
   'Sleep het punt over de boog en verdeel die snelheid tussen ruimte en tijd.';
 
-const BREEDTE = 1100;
-const HOOGTE = 620;
+// Een kwartcirkel is van nature vierkant, dus deze viewBox ook. Is het
+// diagramvak breder dan hoog, dan blijft er links en rechts ruimte over;
+// dat is hier beter dan een uitgerekte cirkel.
+const BREEDTE = 940;
+const HOOGTE = 940;
 
 export function render(doel) {
   let beta = 0.6;
   let sleept = false;
 
-  const uitleg = document.createElement('div');
+  const uitleg = document.createElement('details');
   uitleg.className = 'uitleg';
+  uitleg.open = true;
   uitleg.innerHTML =
-    '<b>Waarom een cirkel?</b> De snelheid door de ruimte en de snelheid door de ' +
-    'tijd vormen samen altijd precies c. In formulevorm: v\u00b2 + (c/\u03b3)\u00b2 = c\u00b2. ' +
-    'Dat is de stelling van Pythagoras, en dus ligt het punt altijd op een cirkel ' +
-    'met straal c. Sta je stil, dan gaat al je snelheid door de tijd. Beweeg je met ' +
-    'bijna c, dan blijft er nauwelijks tijd over \u2014 je klok staat vrijwel stil.';
+    '<summary>Waarom een cirkel?</summary>' +
+    '<p>De snelheid door de ruimte en de snelheid door de tijd vormen samen ' +
+    'altijd precies c: v\u00b2 + (c/\u03b3)\u00b2 = c\u00b2. Dat is de stelling van Pythagoras, ' +
+    'en dus ligt het punt altijd op een cirkel met straal c. Sta je stil, dan ' +
+    'gaat al je snelheid door de tijd. Beweeg je met bijna c, dan blijft er ' +
+    'nauwelijks tijd over \u2014 je klok staat vrijwel stil.</p>';
   doel.appendChild(uitleg);
 
   const vak = document.createElement('div');
@@ -39,6 +44,11 @@ export function render(doel) {
   vak.appendChild(svg);
   doel.appendChild(vak);
 
+  // Alles wat geen diagram is, staat rechts onder elkaar in de zijkolom
+  const zijkolom = document.createElement('div');
+  zijkolom.className = 'zijkolom';
+  doel.appendChild(zijkolom);
+
   const paneel = document.createElement('div');
   paneel.className = 'paneel';
   paneel.innerHTML =
@@ -50,12 +60,11 @@ export function render(doel) {
     '  </div>' +
     '  <div class="knoppen" id="ep-voorbeelden"></div>' +
     '</div>';
-  doel.appendChild(paneel);
+  zijkolom.appendChild(paneel);
 
   const waarden = document.createElement('div');
   waarden.className = 'waarden';
-  waarden.style.marginBottom = '14px';
-  doel.appendChild(waarden);
+  zijkolom.appendChild(waarden);
 
   const bron = document.createElement('div');
   bron.className = 'bron';
@@ -63,7 +72,7 @@ export function render(doel) {
     'Het model komt uit Epstein, "Relativity Visualized" \u2014 in eigen woorden ' +
     'weergegeven. De natuurkunde is identiek aan het Minkowski-diagram; alleen de ' +
     'manier van tekenen verschilt.';
-  doel.appendChild(bron);
+  zijkolom.appendChild(bron);
 
   // Voorbeeldknoppen
   const voorbeelden = [
@@ -86,9 +95,10 @@ export function render(doel) {
     knoppenVak.appendChild(k);
   });
 
-  // Vaste geometrie van de cirkel
-  const R = 420;                    // straal in viewBox-eenheden
-  const ox = 260, oy = HOOGTE - 110; // oorsprong linksonder
+  // Vaste geometrie van de cirkel. Links blijft ruimte voor het aslabel,
+  // dat naast de tijdas hoort te staan en niet eroverheen.
+  const R = 600;                     // straal in viewBox-eenheden
+  const ox = 230, oy = HOOGTE - 130; // oorsprong linksonder
 
   function teken() {
     while (svg.firstChild) svg.removeChild(svg.firstChild);
@@ -116,10 +126,11 @@ export function render(doel) {
       tekst: 'snelheid door de ruimte \u2192', x: ox + R * 0.55, y: oy + 34,
       grootte: 15, kleur: 'var(--gebeurtenis)', anker: 'middle', gewicht: 600, prioriteit: 85,
     });
+    // Netjes links naast de tijdas; met 'middle' lag het er half overheen
     labels.voegToe({
-      tekst: '\u2191 snelheid door de tijd', x: ox - 30, y: oy - R * 0.55,
-      grootte: 15, kleur: 'var(--eigentijd)', anker: 'middle', gewicht: 600, prioriteit: 85,
-      verschuif: [[0, 0]],
+      tekst: '\u2191 snelheid door de tijd', x: ox - 16, y: oy - R * 0.55,
+      grootte: 15, kleur: 'var(--eigentijd)', anker: 'end', gewicht: 600, prioriteit: 85,
+      verschuif: [[0, 0], [0, -26], [0, 26], [0, -52], [0, 52]],
     });
 
     // Kwartcirkel
@@ -172,27 +183,69 @@ export function render(doel) {
       stroke: 'var(--kaart)', 'stroke-width': 3,
     }));
     labels.blokkeer({ links: px - 22, boven: py - 22, breedte: 44, hoogte: 44 });
+    // De schuine zijde blokkeren: bij hoge snelheid loopt hij vlak langs de
+    // liggende zijde, en dan komt het label 'v = ...' er anders bovenop. De
+    // twee rechte zijden liggen op de assen en zijn daar al geblokkeerd.
+    labels.blokkeerSchuin({ x1: ox, y1: oy, x2: px, y2: py, dikte: 12 });
+    // Ook de twee stippellijnen naar het punt: ze zijn dun, maar tekst die er
+    // dwars overheen loopt leest niet.
+    labels.blokkeerLijn({ x1: px, y1: oy, x2: px, y2: py, dikte: 8 });
+    labels.blokkeerLijn({ x1: ox, y1: py, x2: px, y2: py, dikte: 8 });
 
-    // Labels bij de zijden
+    // Labels bij de zijden. Ze staan in de wig tussen hun eigen zijde en de
+    // schuine zijde, en die wig wordt breder naarmate je verder van de
+    // oorsprong komt. Uitwijken gaat dus die kant op.
     if (vRuimte > 0.04) {
+      const liggendUitwijk = [];
+      [0, -22, 26].forEach(function (dy) {
+        [0, 90, 180, 270].forEach(function (dx) { liggendUitwijk.push([dx, dy]); });
+      });
       labels.voegToe({
         tekst: 'v = ' + F.nl(vRuimte, 3) + 'c',
-        x: (ox + px) / 2, y: oy - 14,
+        x: (ox + px) / 2, y: oy - 16,
         grootte: 15, kleur: 'var(--gebeurtenis)', anker: 'middle', gewicht: 650, prioriteit: 78,
-        verschuif: [[0, 0], [0, -20], [0, 26]],
+        verschuif: liggendUitwijk,
       });
     }
+    // Zelfde verhaal staand: omhoog wordt de wig breder, en bij een heel lage
+    // snelheid ligt de schuine zijde zo dicht op de staande dat alleen opzij
+    // nog ruimte geeft.
+    // Bij een snelheid rond 0,2c is de wig nergens breed genoeg; dan wijkt het
+    // label naar de andere kant van de tijdas uit, waar het net zo goed bij
+    // zijn eigen zijde staat.
+    const staandUitwijk = [];
+    [0, -50, -100, -150, -200].forEach(function (dy) {
+      [0, 46].forEach(function (dx) { staandUitwijk.push([dx, dy]); });
+    });
+    [0, -60, 60, -120, 120].forEach(function (dy) { staandUitwijk.push([-128, dy]); });
     labels.voegToe({
       tekst: '1/\u03b3 = ' + F.nl(vTijd, 3),
       x: ox + 16, y: (oy + py) / 2,
       grootte: 15, kleur: 'var(--eigentijd)', gewicht: 650, prioriteit: 78,
-      verschuif: [[0, 0], [0, -22], [0, 22]],
+      verschuif: staandUitwijk,
+    });
+    // 'altijd c' hoort bij de schuine zijde en wijkt daarom loodrecht op die
+    // zijde uit: staat de driehoek bijna rechtop of bijna plat, dan valt het
+    // anders samen met een as of met een van de andere twee labels.
+    const richting = Math.atan2(oy - py, px - ox);
+    const loodX = -Math.sin(richting), loodY = -Math.cos(richting);
+    const langsX = Math.cos(richting), langsY = -Math.sin(richting);
+    const schuinUitwijk = [];
+    [34, 58, 82].forEach(function (af) {
+      [1, -1].forEach(function (kant) {
+        [0, 70, -70, 150, -150].forEach(function (langs) {
+          schuinUitwijk.push([
+            loodX * af * kant + langsX * langs,
+            loodY * af * kant + langsY * langs,
+          ]);
+        });
+      });
     });
     labels.voegToe({
       tekst: 'altijd c',
-      x: (ox + px) / 2 - 18, y: (oy + py) / 2 - 12,
-      grootte: 15, kleur: 'var(--accent)', anker: 'end', gewicht: 650, prioriteit: 76,
-      verschuif: [[0, 0], [0, -24], [-30, 0]],
+      x: (ox + px) / 2, y: (oy + py) / 2,
+      grootte: 15, kleur: 'var(--accent)', anker: 'middle', gewicht: 650, prioriteit: 76,
+      verschuif: schuinUitwijk,
     });
 
     // Vaste punten op de boog
@@ -207,6 +260,10 @@ export function render(doel) {
       tekst: 'licht: klok staat stil',
       x: ox + R - 8, y: oy - 22,
       grootte: 14, kleur: 'var(--gebeurtenis)', anker: 'end', gewicht: 600, prioriteit: 72,
+      // Bij bijna-lichtsnelheid staan het sleeppunt en de stippellijn hier
+      // vlakbij; dan schuift het label naar links weg van de boog.
+      verschuif: [[0, 0], [0, -20], [0, -40], [-70, 0], [-70, -20],
+                  [-150, 0], [-150, -20], [-230, 0], [-230, -20]],
     });
 
     svg.appendChild(labels.tekenAlles());
@@ -227,11 +284,9 @@ export function render(doel) {
 
   // Sleep over de boog: de hoek bepaalt de verdeling
   function verplaats(clientX, clientY) {
-    const rect = svg.getBoundingClientRect();
-    if (!rect.width) return;
-    const vx = ((clientX - rect.left) / rect.width) * BREEDTE;
-    const vy = ((clientY - rect.top) / rect.height) * HOOGTE;
-    let hoek = Math.atan2(oy - vy, vx - ox);
+    const punt = T.naarViewBox(svg, clientX, clientY, BREEDTE, HOOGTE);
+    if (!punt) return;
+    let hoek = Math.atan2(oy - punt.y, punt.x - ox);
     hoek = Math.max(0.01, Math.min(Math.PI / 2 - 0.01, hoek));
     beta = Math.max(0, Math.min(0.99, Math.cos(hoek)));
     schuif.value = String(beta);

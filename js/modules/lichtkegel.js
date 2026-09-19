@@ -10,23 +10,31 @@ export const onderschrift =
   'Welke gebeurtenissen kunnen elkaar be\u00efnvloeden, en welke staan voor altijd los ' +
   'van elkaar? Sleep het punt rond en lees het antwoord af.';
 
-const BREEDTE = 1100;
-const HOOGTE = 620;
+// Maat van het diagramvak op het doelscherm: ongeveer 940 x 935 px.
+const BREEDTE = 960;
+const HOOGTE = 940;
+const MARGE = { boven: 28, onder: 36, links: 52, rechts: 52 };
 const BEREIK = 3.0;
+// Even veel pixels per eenheid x als per eenheid ct, zodat de lichtlijnen
+// precies onder 45° lopen. De ct-grens volgt dus uit het tekenvlak.
+const T_GRENS = BEREIK * (HOOGTE - MARGE.boven - MARGE.onder) /
+                         (BREEDTE - MARGE.links - MARGE.rechts);
 
 export function render(doel) {
   let evT = 1.6, evX = 0.9;
   let beta = 0.0;          // snelheid van het bekijkende kader
   let sleept = false;
 
-  const uitleg = document.createElement('div');
+  const uitleg = document.createElement('details');
   uitleg.className = 'uitleg';
+  uitleg.open = true;
   uitleg.innerHTML =
-    'De twee schuine lijnen zijn de paden van licht door de oorsprong. Ze delen ' +
-    'ruimtetijd in drie gebieden. <b>Binnen</b> de kegel kan een signaal reizen, ' +
-    'dus is oorzaak en gevolg mogelijk. <b>Buiten</b> de kegel niet: daar bestaat ' +
-    'altijd een kader waarin de twee gebeurtenissen gelijktijdig zijn, en zelfs ' +
-    '\u00e9\u00e9n waarin hun volgorde omdraait.';
+    '<summary>Wat de kegel verdeelt</summary>' +
+    '<p>De twee schuine lijnen zijn de paden van licht door de oorsprong. ' +
+    '<b>Binnen</b> de kegel kan een signaal reizen, dus is oorzaak en gevolg ' +
+    'mogelijk. <b>Buiten</b> de kegel niet: daar bestaat altijd een kader waarin ' +
+    'de twee gebeurtenissen gelijktijdig zijn, en zelfs \u00e9\u00e9n waarin hun ' +
+    'volgorde omdraait.</p>';
   doel.appendChild(uitleg);
 
   const vak = document.createElement('div');
@@ -38,6 +46,11 @@ export function render(doel) {
   });
   vak.appendChild(svg);
   doel.appendChild(vak);
+
+  // Alles wat geen diagram is, staat rechts onder elkaar in de zijkolom
+  const zijkolom = document.createElement('div');
+  zijkolom.className = 'zijkolom';
+  doel.appendChild(zijkolom);
 
   const paneel = document.createElement('div');
   paneel.className = 'paneel';
@@ -52,29 +65,28 @@ export function render(doel) {
     '    <button class="knop" id="lk-reset">Zet waarnemer stil</button>' +
     '  </div>' +
     '</div>';
-  doel.appendChild(paneel);
+  zijkolom.appendChild(paneel);
 
   const waarden = document.createElement('div');
   waarden.className = 'waarden';
-  waarden.style.marginBottom = '14px';
-  doel.appendChild(waarden);
+  zijkolom.appendChild(waarden);
 
   const duiding = document.createElement('div');
   duiding.className = 'paneel';
-  doel.appendChild(duiding);
+  zijkolom.appendChild(duiding);
 
   const bron = document.createElement('div');
   bron.className = 'bron';
   bron.textContent =
     'Het causaliteitsargument volgt Takeuchi, "An Illustrated Guide to Relativity", ' +
     'hoofdstuk 5 \u2014 in eigen woorden weergegeven.';
-  doel.appendChild(bron);
+  zijkolom.appendChild(bron);
 
   function maakSchaal() {
     return T.maakSchaal({
       breedte: BREEDTE, hoogte: HOOGTE,
-      xBereik: [-BEREIK, BEREIK], yBereik: [-BEREIK * 0.62, BEREIK * 0.62],
-      marge: { boven: 26, onder: 34, links: 50, rechts: 50 },
+      xBereik: [-BEREIK, BEREIK], yBereik: [-T_GRENS, T_GRENS],
+      marge: MARGE,
     });
   }
 
@@ -84,15 +96,14 @@ export function render(doel) {
     const labels = T.maakLabelPlaatser();
     const xAs = schaal.naarY(0);
     const yAs = schaal.naarX(0);
-    const tGrens = BEREIK * 0.62;
 
     labels.blokkeerLijn({ x1: schaal.naarX(-BEREIK), y1: xAs, x2: schaal.naarX(BEREIK), y2: xAs, dikte: 18 });
-    labels.blokkeerLijn({ x1: yAs, y1: schaal.naarY(-tGrens), x2: yAs, y2: schaal.naarY(tGrens), dikte: 18 });
+    labels.blokkeerLijn({ x1: yAs, y1: schaal.naarY(-T_GRENS), x2: yAs, y2: schaal.naarY(T_GRENS), dikte: 18 });
 
     // Gebieden inkleuren
     const gebieden = [
-      { punten: [[0, 0], [tGrens, tGrens], [-tGrens, tGrens]], kleur: 'var(--eigentijd)', dek: 0.07 },
-      { punten: [[0, 0], [tGrens, -tGrens], [-tGrens, -tGrens]], kleur: 'var(--accent)', dek: 0.07 },
+      { punten: [[0, 0], [T_GRENS, T_GRENS], [-T_GRENS, T_GRENS]], kleur: 'var(--eigentijd)', dek: 0.07 },
+      { punten: [[0, 0], [T_GRENS, -T_GRENS], [-T_GRENS, -T_GRENS]], kleur: 'var(--accent)', dek: 0.07 },
       { punten: [[0, 0], [BEREIK, BEREIK], [BEREIK, -BEREIK]], kleur: 'var(--gebeurtenis)', dek: 0.05 },
       { punten: [[0, 0], [-BEREIK, BEREIK], [-BEREIK, -BEREIK]], kleur: 'var(--gebeurtenis)', dek: 0.05 },
     ];
@@ -113,8 +124,10 @@ export function render(doel) {
     [[1, 1], [-1, 1], [1, -1], [-1, -1]].forEach(function (hoek) {
       labels.blokkeerSchuin({
         x1: yAs, y1: xAs,
-        x2: schaal.naarX(tGrens * hoek[0]), y2: schaal.naarY(tGrens * hoek[1]),
-        dikte: 13,
+        x2: schaal.naarX(T_GRENS * hoek[0]), y2: schaal.naarY(T_GRENS * hoek[1]),
+        // Dun genoeg om het eerste tikgetal naast de as te laten staan,
+        // dik genoeg om tekst op de lijn te voorkomen.
+        dikte: 10,
       });
     });
 
@@ -124,7 +137,7 @@ export function render(doel) {
       stroke: 'var(--perron)', 'stroke-width': 2,
     }));
     svg.appendChild(T.el('line', {
-      x1: yAs, y1: schaal.naarY(-tGrens), x2: yAs, y2: schaal.naarY(tGrens),
+      x1: yAs, y1: schaal.naarY(-T_GRENS), x2: yAs, y2: schaal.naarY(T_GRENS),
       stroke: 'var(--perron)', 'stroke-width': 2,
     }));
     labels.voegToe({
@@ -132,7 +145,7 @@ export function render(doel) {
       grootte: 17, kleur: 'var(--perron)', anker: 'end', gewicht: 650, prioriteit: 95,
     });
     labels.voegToe({
-      tekst: 'ct', x: yAs + 15, y: schaal.naarY(tGrens) + 17,
+      tekst: 'ct', x: yAs + 15, y: schaal.naarY(T_GRENS) + 17,
       grootte: 17, kleur: 'var(--perron)', gewicht: 650, prioriteit: 95,
       // Boven dit label is geen ruimte meer, dus opzij of omlaag uitwijken
       verschuif: [[0, 0], [-52, 0], [0, 20], [-52, 20]],
@@ -156,7 +169,7 @@ export function render(doel) {
         });
       });
     }
-    for (let w = tik; w <= tGrens - 0.05; w += tik) {
+    for (let w = tik; w <= T_GRENS - 0.05; w += tik) {
       [1, -1].forEach(function (kant) {
         const tt = w * kant;
         svg.appendChild(T.el('line', {
@@ -177,12 +190,18 @@ export function render(doel) {
       svg.appendChild(T.worldline(schaal, {
         beta: beta, kleur: 'var(--blauw)', dikte: 2.4,
       }));
+      // De wereldlijn verlaat het beeld bovenaan. Bij een hoge snelheid ligt die
+      // uitgang vlak bij de rand, dus schuift het label mee naar binnen.
+      const naamBreed = 'waarnemer'.length * 14 * 0.58;
+      const naamX = Math.min(Math.max(schaal.naarX(beta * T_GRENS) + 10, 8),
+                             BREEDTE - 8 - naamBreed);
+      // Zijwaarts uitwijken naar de kant waar nog ruimte is
+      const naamZij = naamX - 120 >= 8 ? -120 : 120;
       labels.voegToe({
-        tekst: 'waarnemer', x: schaal.naarX(beta * tGrens) + 10,
-        y: schaal.naarY(tGrens) + 22,
+        tekst: 'waarnemer', x: naamX, y: schaal.naarY(T_GRENS) + 22,
         grootte: 14, kleur: 'var(--blauw)', gewicht: 600, prioriteit: 70,
         // Staat al tegen de bovenrand: alleen opzij en omlaag uitwijken
-        verschuif: [[0, 0], [0, 20], [-120, 0], [0, 40], [-120, 20]],
+        verschuif: [[0, 0], [0, 20], [naamZij, 0], [0, 40], [naamZij, 20]],
       });
       // Gelijktijdigheidslijn van de waarnemer door de gebeurtenis
       const ev = F.lorentz(evT, evX, beta);
@@ -195,12 +214,12 @@ export function render(doel) {
 
     // Zonelabels
     labels.voegToe({
-      tekst: 'TOEKOMST', x: yAs, y: schaal.naarY(tGrens * 0.74),
+      tekst: 'TOEKOMST', x: yAs, y: schaal.naarY(T_GRENS * 0.74),
       grootte: 15, kleur: 'var(--eigentijd)', anker: 'middle', gewicht: 650, prioriteit: 62,
       verschuif: [[0, 0], [70, 0], [-70, 0]],
     });
     labels.voegToe({
-      tekst: 'VERLEDEN', x: yAs, y: schaal.naarY(-tGrens * 0.74),
+      tekst: 'VERLEDEN', x: yAs, y: schaal.naarY(-T_GRENS * 0.74),
       grootte: 15, kleur: 'var(--accent)', anker: 'middle', gewicht: 650, prioriteit: 60,
       verschuif: [[0, 0], [70, 0], [-70, 0]],
     });
@@ -360,20 +379,17 @@ export function render(doel) {
 
   // --- Sleep-interactie ---
   function naarCoord(clientX, clientY) {
-    const rect = svg.getBoundingClientRect();
-    if (!rect.width) return null;
-    const vx = ((clientX - rect.left) / rect.width) * BREEDTE;
-    const vy = ((clientY - rect.top) / rect.height) * HOOGTE;
+    const punt = T.naarViewBox(svg, clientX, clientY, BREEDTE, HOOGTE);
+    if (!punt) return null;
     const schaal = maakSchaal();
-    return { x: schaal.vanX(vx), t: schaal.vanY(vy) };
+    return { x: schaal.vanX(punt.x), t: schaal.vanY(punt.y) };
   }
 
   function verplaats(clientX, clientY) {
     const c = naarCoord(clientX, clientY);
     if (!c) return;
-    const tGrens = BEREIK * 0.62;
     evX = Math.max(-BEREIK * 0.95, Math.min(BEREIK * 0.95, c.x));
-    evT = Math.max(-tGrens * 0.95, Math.min(tGrens * 0.95, c.t));
+    evT = Math.max(-T_GRENS * 0.95, Math.min(T_GRENS * 0.95, c.t));
     teken();
   }
 

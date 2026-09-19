@@ -114,7 +114,7 @@ async function ga(id) {
     location.hash = id;
   } catch (fout) {
     doel.innerHTML =
-      '<div class="paneel" style="border-color:#e0b4b0;background:#fdf2f1">' +
+      '<div class="paneel fout" style="border-color:#e0b4b0;background:#fdf2f1">' +
       '<h3 style="color:#b3261e">Module kon niet laden</h3>' +
       '<div style="font-family:ui-monospace,monospace;font-size:13px;white-space:pre-wrap">' +
       String(fout && fout.message ? fout.message : fout) + '</div></div>';
