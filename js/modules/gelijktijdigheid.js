@@ -84,6 +84,9 @@ export function render(doel) {
   let speelt = false;
   let onderBand = 'minkowski';   // of 'klokstanden'
   let groot = false;             // onderste band over het hele vlak
+  let toonTikken = true;         // gekoppelde tikken t en t' op dezelfde hoogte
+  let toonAflezen = true;        // de x'-as met de afleeslijnen erbij
+  let toonHyper = false;         // ijk-hyperbolen
   let laatsteTik = 0;
 
   /** De grenzen van de onderste band, afhankelijk van het gekozen beeld. */
@@ -146,6 +149,11 @@ export function render(doel) {
     '    <button class="knop klein" id="gt-klok">Klokstanden</button>' +
     '    <button class="knop klein" id="gt-groot">Groot</button>' +
     '  </div>' +
+    '  <div class="knoppen">' +
+    '    <button class="knop klein aan" id="gt-tikken">Tikken</button>' +
+    '    <button class="knop klein aan" id="gt-aflezen">Aflezen</button>' +
+    '    <button class="knop klein" id="gt-hyper">Hyperbolen</button>' +
+    '  </div>' +
     '</div>';
   zijkolom.appendChild(paneel);
 
@@ -156,6 +164,14 @@ export function render(doel) {
   const duiding = document.createElement('div');
   duiding.className = 'paneel';
   zijkolom.appendChild(duiding);
+
+  const vragenPaneel = document.createElement('div');
+  vragenPaneel.className = 'paneel';
+  vragenPaneel.innerHTML =
+    '<h3>Vragen bij het diagram</h3><div class="formules" id="gt-vragen"></div>';
+  zijkolom.appendChild(vragenPaneel);
+  const vragenVak = vragenPaneel.querySelector('#gt-vragen');
+  const openVragen = new Set();
 
   const bron = document.createElement('div');
   bron.className = 'bron';
@@ -503,6 +519,9 @@ export function render(doel) {
     const pxPer = ms.naarX(1) - ms.naarX(0);      // pixels per eenheid, x en ct gelijk
     const perpLen = Math.hypot(1, beta);
     const perpX = 1 / perpLen, perpY = beta / perpLen;   // loodrecht op een wereldlijn
+    // Loodrecht op de x'-as. Op het scherm loopt die as in de richting
+    // (1, -beta); daar staat (beta, 1) loodrecht op, niet (1, beta).
+    const dwarsX = beta / perpLen, dwarsY = 1 / perpLen;
 
     labels.voegToe({
       tekst: 'MINKOWSKI-DIAGRAM', x: MARGE.links, y: B.titel,
@@ -531,6 +550,18 @@ export function render(doel) {
     }
 
     const xAs = ms.naarY(0), yAs = ms.naarX(0);
+
+    /** Kort label met een uitwijkladder die binnen beeld blijft. */
+    function merk(tekst, x, y, kleur, o) {
+      const spec = {
+        tekst: tekst, x: x, y: y, grootte: (o && o.grootte) || 12, kleur: kleur,
+        gewicht: (o && o.gewicht) || 600, prioriteit: (o && o.prioriteit) || 40,
+        anker: (o && o.anker) || 'start', cursief: !!(o && o.cursief),
+      };
+      spec.verschuif = ladder(spec, (o && o.plekken) ||
+        [[0, 0], [0, 16], [0, -16], [0, 32], [0, -32], [0, 48]]);
+      labels.voegToe(spec);
+    }
 
     // Lichtkegel vanaf de flits: onder 45°, want x en ct hebben dezelfde schaal
     svg.appendChild(T.lichtkegel(ms, { kleur: 'var(--licht)' }));
@@ -578,6 +609,28 @@ export function render(doel) {
         grootte: 12, kleur: 'var(--tekst-zacht)', anker: 'end', prioriteit: 34,
         verschuif: [[0, 0], [-28, 0], [-56, 0], [0, -14], [-28, -14], [0, 14]],
       });
+      // Op dezelfde hoogte een gouden tik op de ct'-as: dat is de middenklok
+      // van de trein, en die staat op t/gamma. Hetzelfde moment in het perron,
+      // een kleiner getal op de bewegende klok - dat is tijdsdilatatie.
+      if (toonTikken) {
+        const gx = ms.naarX(beta * ct), gy = ms.naarY(ct);
+        svg.appendChild(T.el('circle', { cx: gx, cy: gy, r: 2.6, fill: 'var(--trein)' }));
+        svg.appendChild(T.el('line', {
+          x1: gx - perpX * 6, y1: gy - perpY * 6,
+          x2: gx + perpX * 6, y2: gy + perpY * 6,
+          stroke: 'var(--trein)', 'stroke-width': 1.3,
+        }));
+        if (groot) {
+          // De flauwe lijn erdoorheen is wat de trein op dat moment 'nu' noemt
+          svg.appendChild(T.nuLijn(ms, {
+            beta: beta, x0: beta * ct, t0: ct,
+            kleur: 'var(--trein)', dikte: 0.7, streep: '2 5',
+          }));
+          merk('t\u2032=' + F.nl(ct / o.g, 2), gx + 10, gy - 7, 'var(--trein)',
+               { grootte: 11.5, gewicht: 400, prioriteit: 30,
+                 plekken: [[0, 0], [0, -15], [0, 15], [0, 30], [-70, 0], [0, -30]] });
+        }
+      }
     }
     labels.voegToe({
       tekst: 'x', x: ms.naarX(o.xRechts) - 2, y: xAs - 10,
@@ -589,6 +642,77 @@ export function render(doel) {
       grootte: 14, kleur: 'var(--perron)', gewicht: 650, prioriteit: 88,
       verschuif: [[0, 0], [-46, 0], [-80, 0], [0, 18], [-46, 18]],
     });
+
+    // IJk-hyperbolen: elk punt erop ligt één eenheid van de oorsprong, in welk
+    // kader je ook meet. Waar ze de assen van de trein snijden, ligt dus zijn
+    // eigen "1" — het ijkpunt waarmee je zijn maatverdeling vastlegt.
+    if (toonHyper) {
+      const bogen = T.el('g');
+      [[1, 0], [0, 1]].forEach(function (soort) {
+        const punten = [];
+        for (let sh = -2.2; sh <= 2.2; sh += 0.02) {
+          const ch = Math.cosh(sh), sn = Math.sinh(sh);
+          const x = soort[0] ? ch : sn;
+          const ct = soort[0] ? sn : ch;
+          if (x < o.xLinks || x > o.xRechts || ct < o.ctOnder || ct > o.ctBoven) continue;
+          punten.push(ms.naarX(x).toFixed(1) + ',' + ms.naarY(ct).toFixed(1));
+        }
+        if (punten.length > 1) {
+          bogen.appendChild(T.el('polyline', {
+            points: punten.join(' '), fill: 'none', stroke: 'var(--licht)',
+            'stroke-width': 1.2, 'stroke-dasharray': '2 5',
+          }));
+        }
+      });
+      svg.appendChild(bogen);
+      // De twee ijkpunten: x'=1 op de x'-as en t'=1 op de ct'-as
+      [[o.g, o.g * beta, 'x\u2032 = 1', 'var(--eigentijd)'],
+       [o.g * beta, o.g, 't\u2032 = 1', 'var(--accent)'],
+      ].forEach(function (p, i) {
+        if (p[0] < o.xLinks || p[0] > o.xRechts || p[1] < o.ctOnder || p[1] > o.ctBoven) return;
+        svg.appendChild(T.el('circle', {
+          cx: ms.naarX(p[0]), cy: ms.naarY(p[1]), r: 5.5,
+          fill: p[3], stroke: 'var(--kaart)', 'stroke-width': 1.5,
+        }));
+        if (groot) {
+          merk(p[2], ms.naarX(p[0]) + 12, ms.naarY(p[1]) + 4, p[3],
+               { grootte: 13, gewicht: 650, prioriteit: 52 - i,
+                 plekken: [[0, 0], [0, -18], [0, 18], [-90, 0], [0, 36], [0, -36]] });
+        }
+      });
+    }
+
+    // De x'-as: alles wat de trein gelijktijdig noemt met de flits (t' = 0).
+    // Hij helt even ver als de wereldlijnen, maar de andere kant op.
+    if (toonAflezen) {
+      svg.appendChild(T.nuLijn(ms, {
+        beta: beta, x0: 0, t0: 0, kleur: 'var(--trein)', dikte: 1.6, streep: null,
+      }));
+      const xStapAccent = F.netteStap((o.xRechts - o.xLinks) / 5);
+      for (let k = -6; k <= 6; k++) {
+        const xAccent = k * xStapAccent;
+        if (xAccent === 0) continue;
+        const px = o.g * xAccent, pct = o.g * beta * xAccent;
+        if (px < o.xLinks || px > o.xRechts || pct < o.ctOnder || pct > o.ctBoven) continue;
+        const sx = ms.naarX(px), sy = ms.naarY(pct);
+        svg.appendChild(T.el('line', {
+          x1: sx + dwarsX * 6, y1: sy + dwarsY * 6,
+          x2: sx - dwarsX * 6, y2: sy - dwarsY * 6,
+          stroke: 'var(--trein)', 'stroke-width': 1.4,
+        }));
+        if (groot) {
+          merk('x\u2032=' + F.nl(xAccent, 1), sx + 8, sy + 16, 'var(--trein)',
+               { grootte: 11.5, gewicht: 400, prioriteit: 22,
+                 plekken: [[0, 0], [0, 14], [-46, 0], [0, -28], [0, 28]] });
+        }
+      }
+      if (groot) {
+        merk('x\u2032-as', ms.naarX(o.xRechts) - 6,
+             ms.naarY(beta * o.xRechts) - 10, 'var(--trein)',
+             { anker: 'end', grootte: 12.5, gewicht: 650, prioriteit: 58,
+               plekken: [[0, 0], [0, -18], [0, 18], [-70, 0], [0, -36]] });
+      }
+    }
 
     // De drie wereldlijnen van de trein, met een tik per eigen seconde.
     // De tikken op de drie lijnen liggen niet naast elkaar: precies dat
@@ -613,11 +737,21 @@ export function render(doel) {
         if (tTik < o.ctOnder || tTik > o.ctBoven) continue;
         const px = ms.naarX(x0 + beta * tTik), py = ms.naarY(tTik);
         const lang = Math.abs(k) % 5 === 0 ? 8 : 5.5;
-        svg.appendChild(T.el('line', {
-          x1: px - perpX * lang, y1: py - perpY * lang,
-          x2: px + perpX * lang, y2: py + perpY * lang,
-          stroke: 'var(--trein)', 'stroke-width': k === 0 ? 2.2 : 1.4,
-        }));
+        if (x0 === 0 && k !== 0) {
+          // Op de ct'-as een ruitje: dit is de tweede reeks, met ronde eigen
+          // tijd. Die ligt hoger dan de gekoppelde tik met hetzelfde getal.
+          svg.appendChild(T.el('rect', {
+            x: px - 4, y: py - 4, width: 8, height: 8,
+            fill: 'var(--kaart)', stroke: 'var(--trein)', 'stroke-width': 1.6,
+            transform: 'rotate(45 ' + px.toFixed(1) + ' ' + py.toFixed(1) + ')',
+          }));
+        } else {
+          svg.appendChild(T.el('line', {
+            x1: px - perpX * lang, y1: py - perpY * lang,
+            x2: px + perpX * lang, y2: py + perpY * lang,
+            stroke: 'var(--trein)', 'stroke-width': k === 0 ? 2.2 : 1.4,
+          }));
+        }
         // In het grote beeld krijgt de middenklok er getallen bij
         if (groot && x0 === 0 && k > 0) {
           const nr = {
@@ -688,6 +822,31 @@ export function render(doel) {
       labels.voegToe(merk);
     });
 
+    // Het inhaalmoment: hier wijst de perronklok hetzelfde aan als de
+    // (berekende) achterklok. Daarvoor liep de achterklok voor, daarna achter.
+    if (Number.isFinite(o.inhaal) && o.inhaal >= o.ctOnder && o.inhaal <= o.ctBoven) {
+      const xIn = -halfEigen + beta * o.inhaal;
+      if (xIn >= o.xLinks && xIn <= o.xRechts) {
+        svg.appendChild(T.el('line', {
+          x1: ms.naarX(o.xLinks), y1: ms.naarY(o.inhaal),
+          x2: ms.naarX(o.xRechts), y2: ms.naarY(o.inhaal),
+          stroke: 'var(--accent)', 'stroke-width': 0.9, 'stroke-dasharray': '2 4',
+        }));
+        svg.appendChild(T.el('circle', {
+          cx: ms.naarX(xIn), cy: ms.naarY(o.inhaal), r: 5.5,
+          fill: 'var(--accent)', stroke: 'var(--kaart)', 'stroke-width': 1.5,
+        }));
+        // Het label hangt aan de linkerkant van zijn eigen lijn: tussen de
+        // wereldlijnen door past zo'n tekst vaak niet, links ervan altijd.
+        merk(groot ? 'inhaalmoment t = ' + F.nl(o.inhaal, 2)
+                   : 'inhaal ' + F.nl(o.inhaal, 2),
+             ms.naarX(o.xLinks) + 6, ms.naarY(o.inhaal) - 10, 'var(--accent)',
+             { grootte: 12.5, gewicht: 650, prioriteit: 68,
+               plekken: [[0, 0], [0, -17], [0, 19], [0, -34], [0, 36], [0, -51],
+                         [60, 0], [60, -17], [120, 0], [0, 53]] });
+      }
+    }
+
     // De flits zelf
     svg.appendChild(T.gebeurtenis(ms, { t: 0, x: 0, kleur: 'var(--gebeurtenis)', straal: 6 }));
 
@@ -734,6 +893,46 @@ export function render(doel) {
           [over2, 0], [over2, 19], [over2, -19], [over2, 38], [over2, -38],
         ]);
         labels.voegToe(stap);
+        // Aflezen: vanaf dit punt evenwijdig aan de ct'-as omlaag naar de x'-as
+        // geeft de plek in de trein (altijd +/- L/2, hoe laat het ook is), en
+        // evenwijdig aan de x'-as naar de ct'-as geeft de klokstand.
+        if (toonAflezen && i !== 1) {
+          const xP = x0 + beta * t;
+          const sNaarX = o.g * o.g * (beta * xP - t);
+          const snijX = { x: xP + beta * sNaarX, ct: t + sNaarX };
+          if (snijX.ct >= o.ctOnder && snijX.ct <= o.ctBoven &&
+              snijX.x >= o.xLinks && snijX.x <= o.xRechts) {
+            svg.appendChild(T.el('line', {
+              x1: px, y1: py, x2: ms.naarX(snijX.x), y2: ms.naarY(snijX.ct),
+              stroke: 'var(--trein)', 'stroke-width': 1, 'stroke-dasharray': '2 4',
+            }));
+            svg.appendChild(T.el('circle', {
+              cx: ms.naarX(snijX.x), cy: ms.naarY(snijX.ct), r: 3.4, fill: 'var(--trein)',
+            }));
+            if (groot) {
+              merk('x\u2032=' + F.nl(xAccent, 2), ms.naarX(snijX.x) + (i === 0 ? -10 : 10),
+                   ms.naarY(snijX.ct) + 16, 'var(--trein)',
+                   { anker: i === 0 ? 'end' : 'start', grootte: 12, gewicht: 650,
+                     prioriteit: 56,
+                     plekken: [[0, 0], [0, 15], [0, 30], [0, -15], [0, -30],
+                               [(i === 0 ? -1 : 1) * 40, 0], [(i === 0 ? -1 : 1) * 40, 15],
+                               [(i === 0 ? -1 : 1) * 80, 0], [0, 45]] });
+            }
+          }
+          const uNaarCt = o.g * o.g * (beta * t - xP);
+          const snijT = { x: xP + uNaarCt, ct: t + beta * uNaarCt };
+          if (snijT.ct >= o.ctOnder && snijT.ct <= o.ctBoven &&
+              snijT.x >= o.xLinks && snijT.x <= o.xRechts) {
+            svg.appendChild(T.el('line', {
+              x1: px, y1: py, x2: ms.naarX(snijT.x), y2: ms.naarY(snijT.ct),
+              stroke: 'var(--eigentijd)', 'stroke-width': 1, 'stroke-dasharray': '1 4',
+            }));
+            svg.appendChild(T.el('circle', {
+              cx: ms.naarX(snijT.x), cy: ms.naarY(snijT.ct), r: 3.4, fill: 'var(--eigentijd)',
+            }));
+          }
+        }
+
         // Op de trein-nulijn: ct = t + beta*gamma^2*x0 voor de wereldlijn door x0
         const ctTrein = t + beta * o.g * o.g * x0;
         if (ctTrein >= o.ctOnder && ctTrein <= o.ctBoven) {
@@ -905,6 +1104,106 @@ export function render(doel) {
     duiding.innerHTML =
       '<h3>Wat er nu gebeurt</h3>' +
       '<p style="margin:0">' + fase + ' ' + klokZin + ' ' + ringZin + '</p>';
+    vulVragen(o);
+  }
+
+  /** De vragen onder het diagram, met de getallen van dit moment erin. */
+  function vulVragen(o) {
+    const g = o.g;
+    const stapT = F.netteStap(o.ctBoven / 4);
+    const kaarten = [
+      ['Waarom raakt het licht de achterkant eerder?',
+       't<sub>achter</sub> = \u03b3\u00b7L\u00b7(1\u2212\u03b2)/2 \u00a0\u00a0 t<sub>voor</sub> = \u03b3\u00b7L\u00b7(1+\u03b2)/2',
+       'hier ' + F.nl(o.tAchter, 2) + ' tegen ' + F.nl(o.tVoor, 2) +
+       ', een verschil van ' + F.nl(o.tVoor - o.tAchter, 2),
+       'Vanaf het perron rijdt de achterkant het licht tegemoet en loopt de ' +
+       'voorkant ervoor weg. Het licht gaat naar beide kanten even snel, dus de ' +
+       'kant die naar het licht toe komt is eerder aan de beurt. In de trein ' +
+       'zelf bestaat dat verschil niet: daar liggen beide wanden even ver weg.'],
+      ['Waarom staan beide treinklokken dan toch op hetzelfde?',
+       't\u2032 = L/2 aan beide kanten',
+       'L/2 = ' + F.nl(L / 2, 2) + ' \u2014 allebei de aankomsten liggen op de stippellijn',
+       'In het treinkader legt het licht naar beide kanten L/2 af met snelheid c, ' +
+       'dus komt het er op hetzelfde moment aan. In het diagram zie je dat als ' +
+       '\u00e9\u00e9n lijn evenwijdig aan de x\u2032-as door beide gebeurtenissen: wat op zo\u2019n ' +
+       'lijn ligt, noemt de trein gelijktijdig.'],
+      ['Wat is het paarse inhaalmoment?',
+       't = (\u03b2\u00b7L/2) / (1 \u2212 1/\u03b3)',
+       Number.isFinite(o.inhaal)
+         ? 'voorsprong ' + F.nl(beta * L / 2, 3) + ', tempoverschil ' +
+           F.nl(1 - 1 / g, 3) + ' \u2192 t = ' + F.nl(o.inhaal, 2)
+         : 'bij stilstand haalt de perronklok nooit in',
+       'De achterklok begint met een voorsprong van \u03b2\u00b7L/2 op de perronklok, maar ' +
+       'tikt trager: 1/\u03b3 = ' + F.nl(1 / g, 3) + ' per perronseconde. Twee rechte ' +
+       'lijnen met verschillende helling snijden elkaar \u00e9\u00e9n keer, en daar is de ' +
+       'voorsprong precies opgebruikt. Daarna loopt de perronklok zelf voor.'],
+      ['Hoe komt een tijdstik aan zijn getal?',
+       't<sub>k</sub> = k \u00b7 ' + F.nl(stapT, stapT < 1 ? 1 : 0) +
+       ' (rond) \u00a0\u2192\u00a0 t\u2032 = t<sub>k</sub>/\u03b3 (niet rond)',
+       'per zwarte stap van ' + F.nl(stapT, stapT < 1 ? 1 : 0) +
+       ' gaat de treinklok ' + F.nl(stapT / g, 2) + ' vooruit',
+       'De zwarte tikken op de ct-as zijn een keuze van de tekening: ronde ' +
+       'getallen op gelijke afstanden. De gouden tik ernaast volgt uit de ' +
+       'natuurkunde \u2014 dezelfde hoogte in het diagram, maar de meebewegende klok ' +
+       'staat op t/\u03b3. Delen door \u03b3 maakt van een rond getal bijna nooit weer een ' +
+       'rond getal, vandaar die krommere waarden.'],
+      ['Waarom twee soorten tikken op de ct\u2032-as?',
+       'rondje: t\u2032 = t<sub>k</sub>/\u03b3 \u00a0\u00a0 ruitje: t\u2032 = rond getal',
+       'een ruitje op t\u2032 = 1 ligt in het perron op ct = \u03b3 = ' + F.nl(g, 3),
+       'De rondjes hangen aan de zwarte tikken: zelfde hoogte, dus direct te ' +
+       'vergelijken met de perronklok. De ruitjes zijn de eigen maatverdeling van ' +
+       'de trein, op ronde eigen tijd. Die liggen h\u00f3ger, want om \u00e9\u00e9n ronde eigen ' +
+       'seconde te maken moet je in perrontijd een factor \u03b3 verder omhoog.'],
+      ['Waarom is t\u2032 kleiner dan t op dezelfde hoogte?',
+       't\u2032 = \u03b3(t \u2212 \u03b2\u00b7x), en op de ct\u2032-as is x = \u03b2\u00b7t',
+       'invullen: t\u2032 = \u03b3\u00b7t\u00b7(1 \u2212 \u03b2\u00b2) = t/\u03b3 = t/' + F.nl(g, 3),
+       'Een punt op de ct\u2032-as is de middenklok van de trein. Vul zijn plek in de ' +
+       'Lorentz-transformatie in en er blijft t/\u03b3 over. Omdat \u03b3 altijd groter is ' +
+       'dan 1, is dat minder dan t. Dat is tijdsdilatatie, en het is precies wat ' +
+       'het hoogteverschil tussen de twee tikreeksen laat zien.'],
+      ['Wat lees je af langs de x\u2032-as?',
+       'evenwijdig aan de ct\u2032-as omlaag \u2192 x\u2032 = \u00b1L/2',
+       'achterkant ' + F.nl(-L / 2, 2) + ', voorkant ' + F.nl(L / 2, 2) +
+       ' \u2014 op elk moment hetzelfde',
+       'De stippellijn vanaf een uiteinde loopt evenwijdig aan de ct\u2032-as: dat is ' +
+       'de wereldlijn van dat uiteinde, dus elk punt erop zit op dezelfde plek ' +
+       'in de trein. Waar hij de x\u2032-as snijdt, staat die plek op de maatverdeling ' +
+       'van de trein zelf. Hoe laat het ook is, er komt steeds \u00b1L/2 uit: in zijn ' +
+       'eigen kader wordt de trein niet korter. Het perron meet ondertussen ' +
+       'L/\u03b3 = ' + F.nl(L / g, 2) + '.'],
+      ['Wat doen de ijk-hyperbolen?',
+       '(ct)\u00b2 \u2212 x\u00b2 = 1 \u00a0 en \u00a0 x\u00b2 \u2212 (ct)\u00b2 = 1',
+       'ijkpunt t\u2032 = 1 ligt op (' + F.nl(beta * g, 2) + ', ' + F.nl(g, 2) +
+       '), ijkpunt x\u2032 = 1 op (' + F.nl(g, 2) + ', ' + F.nl(beta * g, 2) + ')',
+       'Bij een gewone draaiing legt een cirkel de eenheid vast voor elk gedraaid ' +
+       'assenstelsel. In de ruimtetijd blijft niet x\u00b2 + y\u00b2 gelijk maar ' +
+       '(ct)\u00b2 \u2212 x\u00b2, dus doet een hyperbool dat werk. Waar de ct\u2032-as zijn ' +
+       'hyperbool snijdt, ligt het echte punt t\u2032 = 1 van de trein; zo weet je ' +
+       'hoe lang zijn seconden op deze tekening zijn.'],
+      ['Wat betekenen de tekens?',
+       't, t\u2032, \u03c4, \u03b3, L, L/\u03b3, \u03b2\u00b7L',
+       '\u03b3 = ' + F.nl(g, 3) + ', L = ' + F.nl(L, 2) + ', L/\u03b3 = ' + F.nl(L / g, 2) +
+       ', \u03b2\u00b7L = ' + F.nl(beta * L, 2),
+       't is perrontijd: het label van een heel net van gelijklopende ' +
+       'perronklokken. t\u2032 is diezelfde soort tijd, maar dan in het net dat met de ' +
+       'trein meerijdt. \u03c4 is wat \u00e9\u00e9n bepaalde klok zelf aanwijst \u2014 geen afspraak ' +
+       'maar een aflezing. \u03b3 is de omrekenfactor tussen de twee netten, L de eigen ' +
+       'lengte van de trein, L/\u03b3 de lengte die het perron meet, en \u03b2\u00b7L het vaste ' +
+       'verschil tussen de achter- en de voorklok, gezien vanaf het perron.'],
+    ];
+    vragenVak.innerHTML = kaarten.map(function (k, i) {
+      return '<details class="formule"' + (openVragen.has(i) ? ' open' : '') +
+        ' data-nr="' + i + '"><summary><span class="naam">' + k[0] + '</span></summary>' +
+        '<div class="formule-inhoud"><div class="formule-regel">' + k[1] + '</div>' +
+        '<div class="som">' + k[2] + '</div>' +
+        '<p class="waarom">' + k[3] + '</p></div></details>';
+    }).join('');
+    vragenVak.querySelectorAll('details').forEach(function (d) {
+      d.addEventListener('toggle', function () {
+        const nr = Number(d.getAttribute('data-nr'));
+        if (d.open) openVragen.add(nr); else openVragen.delete(nr);
+      });
+    });
   }
 
   // --- Bediening ---
@@ -920,6 +1219,9 @@ export function render(doel) {
   const minkKnop = paneel.querySelector('#gt-mink');
   const klokKnop = paneel.querySelector('#gt-klok');
   const grootKnop = paneel.querySelector('#gt-groot');
+  const tikkenKnop = paneel.querySelector('#gt-tikken');
+  const aflezenKnop = paneel.querySelector('#gt-aflezen');
+  const hyperKnop = paneel.querySelector('#gt-hyper');
 
   /** De tijdschuif hangt af van v en L, dus die stellen we telkens opnieuw in. */
   function stelTijdschuifIn() {
@@ -1002,6 +1304,21 @@ export function render(doel) {
   }
   minkKnop.addEventListener('click', function () { kiesBand('minkowski'); });
   klokKnop.addEventListener('click', function () { kiesBand('klokstanden'); });
+  tikkenKnop.addEventListener('click', function () {
+    toonTikken = !toonTikken;
+    tikkenKnop.classList.toggle('aan', toonTikken);
+    werkBij();
+  });
+  aflezenKnop.addEventListener('click', function () {
+    toonAflezen = !toonAflezen;
+    aflezenKnop.classList.toggle('aan', toonAflezen);
+    werkBij();
+  });
+  hyperKnop.addEventListener('click', function () {
+    toonHyper = !toonHyper;
+    hyperKnop.classList.toggle('aan', toonHyper);
+    werkBij();
+  });
   grootKnop.addEventListener('click', function () {
     groot = !groot;
     grootKnop.classList.toggle('aan', groot);
