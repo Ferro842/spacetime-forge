@@ -222,9 +222,15 @@ export function lichtkegel(schaal, { t0 = 0, x0 = 0, kleur = 'var(--licht)', naa
   return groep;
 }
 
-/** Tekent een wereldlijn: een rechte lijn met helling beta door (x0, t0). */
-export function worldline(schaal, { beta, x0 = 0, t0 = 0, kleur, dikte = 2, streep = null }) {
-  const [tMin, tMax] = schaal.yBereik;
+/**
+ * Tekent een wereldlijn: een rechte lijn met helling beta door (x0, t0).
+ * Standaard van onder- tot bovenrand; met tVan/tTot kap je hem af, wat nodig
+ * is bij een snelle wereldlijn die eerder de zijkant uit loopt dan de bovenkant.
+ */
+export function worldline(schaal, { beta, x0 = 0, t0 = 0, kleur, dikte = 2, streep = null, tVan = null, tTot = null }) {
+  const [tOnder, tBoven] = schaal.yBereik;
+  const tMin = tVan === null ? tOnder : tVan;
+  const tMax = tTot === null ? tBoven : tTot;
   const xa = x0 + beta * (tMin - t0);
   const xb = x0 + beta * (tMax - t0);
   return el('line', {

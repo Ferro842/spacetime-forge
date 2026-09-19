@@ -217,6 +217,55 @@ input[type=range]::-webkit-slider-thumb {
   font-variant-numeric: tabular-nums;
 }
 
+/* Compacte keuzeknop voor rijtjes: aantal objecten, kaderkeuze */
+.knop.klein { padding: 5px 11px; font-size: 12.5px; }
+
+/* Paneelkop met een rij knoppen ernaast, zodat er geen regel verloren gaat */
+.paneel-kop { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.paneel-kop > h3 {
+  margin: 0; flex: 1;
+  font-size: 13px; font-weight: 650; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--tekst-zacht);
+}
+
+/* Eén object per regel: naam, snelheidsschuif en de waarde ernaast.
+   Alles op dezelfde regel, want de kolom heeft geen hoogte te verspelen. */
+.object-regel { display: flex; align-items: center; gap: 7px; padding: 1px 0; }
+.object-regel input[type=range] { flex: 1; min-width: 0; height: 28px; }
+.naam-invoer {
+  width: 78px; flex: none; padding: 2px 2px;
+  font: inherit; font-size: 13px; color: var(--tekst);
+  background: none; border: none; border-bottom: 2px solid var(--rand-sterk);
+  border-radius: 0;
+}
+.naam-invoer:focus { outline: none; border-bottom-color: var(--blauw); }
+.regel-waarde {
+  width: 50px; flex: none; text-align: right; font-size: 13px;
+  font-variant-numeric: tabular-nums; color: var(--tekst);
+}
+
+/* Tabel met gemeten waarden, smal genoeg voor de zijkolom */
+.tabel {
+  width: 100%; border-collapse: collapse; margin-top: 10px;
+  font-size: 12.5px; font-variant-numeric: tabular-nums;
+}
+.tabel caption {
+  caption-side: top; text-align: left; padding: 0 0 3px;
+  font-size: 11.5px; color: var(--tekst-zacht);
+}
+.tabel th {
+  text-align: right; padding: 2px 0 3px; font-size: 11px; font-weight: 650;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--tekst-zacht); border-bottom: 1px solid var(--rand);
+}
+.tabel td { text-align: right; padding: 3px 0; border-bottom: 1px solid var(--rand); }
+.tabel th:first-child, .tabel td:first-child { text-align: left; }
+.tabel tbody tr:last-child td { border-bottom: none; }
+.tabel .stip {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  margin-right: 6px; vertical-align: 1px;
+}
+
 .uitleg {
   background: var(--blauw-zacht); border: 1px solid #cfe0f2;
   border-radius: var(--radius); padding: 10px 16px;
@@ -240,6 +289,13 @@ input[type=range]::-webkit-slider-thumb {
 .bron {
   font-size: 12px; color: var(--tekst-zacht); font-style: italic;
   margin-top: 8px;
+}
+
+/* Klein vaantje linksboven in een diagramvak: welk kader je ziet.
+   Staat in de marge van de tekening, dus het botst nooit met een label. */
+.vak-vaan {
+  position: absolute; top: 9px; left: 14px; pointer-events: none;
+  font-size: 13px; font-weight: 650; letter-spacing: 0.01em;
 }
 
 .zoom-overlay {
