@@ -277,6 +277,13 @@ input[type=range]::-webkit-slider-thumb {
 .boekhouding .sprong > span, .boekhouding .sprong > b { color: var(--accent); }
 .boekhouding .som > b { color: var(--tekst); }
 .boekhouding > div:last-child { border-bottom: none; }
+/* Kopregel boven een boekhouding: geen waarde maar een kolomtitel */
+.boekhouding > div.kop {
+  border-bottom: 1px solid var(--rand-sterk);
+  text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px;
+}
+.boekhouding > div.kop > span { color: var(--tekst-zacht); font-weight: 650; }
+.boekhouding > div.kop > b { color: var(--tekst-zacht); }
 .duiding {
   margin: 8px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--tekst-zacht);
 }

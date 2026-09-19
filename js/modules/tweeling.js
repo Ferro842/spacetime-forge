@@ -1,6 +1,13 @@
 // tweeling.js — de tweelingparadox, met de gelijktijdigheidslijn van de
 // reiziger als hoofdrolspeler: bij de omkeer slaat die lijn door, en daarmee
 // springt er op aarde een stuk tijd voorbij dat de reiziger nooit meemaakt.
+//
+// Daarnaast de tweede helft van het verhaal: de lichtsignalen zelf. Wat de
+// reiziger berékent springt bij de omkeer, maar wat hij zíet verandert
+// geleidelijk — op de heenweg komen de aardtikken uitgerekt binnen, op de
+// terugweg samengeperst. Tel die twee stukken op en er komt precies dezelfde
+// eindstand uit, zonder ergens een sprong. De sprong is een boekhoudkeuze,
+// geen gebeurtenis die iemand meemaakt.
 
 import * as F from '../fysica.js';
 import * as T from '../teken.js';
@@ -47,6 +54,8 @@ export function render(doel) {
   let fractie = 0;         // waar in de reis, in aardtijd (0..1 van 2T)
   let speelt = false;
   let wachtTot = 0;        // even stilstaan op het keerpunt tijdens afspelen
+  let toonAarde = true;    // lichtsignalen van de aarde naar het schip
+  let toonSchip = false;   // lichtsignalen van het schip naar de aarde
 
   const uitleg = document.createElement('details');
   uitleg.className = 'uitleg';
@@ -58,7 +67,11 @@ export function render(doel) {
     'achter. Bij de omkeer wisselt de reiziger van kader en <b>slaat de lijn ' +
     'door</b> \u2014 in \u00e9\u00e9n klap schuift het paarse stuk aardtijd voorbij, zonder dat ' +
     'de reiziger er ook maar \u00e9\u00e9n tik van meemaakt. Precies dat stuk maakt het ' +
-    'verschil bij thuiskomst.</p>';
+    'verschil bij thuiskomst.</p>' +
+    '<p style="margin-top:7px">Zet <b>Aarde seint</b> aan en het andere verhaal ' +
+    'komt erbij: de lichtsignalen zelf. Die springen nergens. Op de heenweg komen ' +
+    'ze uitgerekt binnen, op de terugweg samengeperst, en samen leveren ze precies ' +
+    'de volle aardtijd op.</p>';
   doel.appendChild(uitleg);
 
   const vak = document.createElement('div');
@@ -100,6 +113,10 @@ export function render(doel) {
     '  <button class="knop klein" id="tw-begin">Begin</button>' +
     '  <button class="knop klein" id="tw-keer">Keerpunt</button>' +
     '  <button class="knop klein" id="tw-eind">Thuis</button>' +
+    '</div>' +
+    '<div class="knoppen" style="margin-top:8px">' +
+    '  <button class="knop klein aan" id="tw-sein-aarde">Aarde seint</button>' +
+    '  <button class="knop klein" id="tw-sein-schip">Schip seint</button>' +
     '</div>';
   zijkolom.appendChild(paneel);
 
@@ -108,12 +125,28 @@ export function render(doel) {
   klokPaneel.innerHTML = '<h3>De twee klokken</h3><div id="tw-klokken"></div>';
   zijkolom.appendChild(klokPaneel);
 
+  const zienPaneel = document.createElement('div');
+  zienPaneel.className = 'paneel';
+  zienPaneel.innerHTML = '<h3>Wat je werkelijk ziet</h3><div id="tw-zien"></div>';
+  zijkolom.appendChild(zienPaneel);
+
+  const vragenPaneel = document.createElement('div');
+  vragenPaneel.className = 'paneel';
+  vragenPaneel.innerHTML =
+    '<h3>Vragen bij het diagram</h3><div class="formules" id="tw-vragen"></div>';
+  zijkolom.appendChild(vragenPaneel);
+  const vragenVak = vragenPaneel.querySelector('#tw-vragen');
+  const openVragen = new Set();
+
   const bron = document.createElement('div');
   bron.className = 'bron';
   bron.textContent =
     'De omkeer als wisseling van kader volgt Takeuchi, "An Illustrated Guide to ' +
     'Relativity", hoofdstuk 7; het idee dat alleen de reiziger van kader wisselt ' +
-    'staat bij Einstein, "Relativity", hoofdstuk 18 \u2014 in eigen woorden weergegeven.';
+    'staat bij Einstein, "Relativity", hoofdstuk 18. Het onderscheid tussen wat je ' +
+    'berekent en wat je daadwerkelijk ziet komt van Epstein, "Relativity ' +
+    'Visualized", het hoofdstuk over de dopplerverschuiving \u2014 alles in eigen ' +
+    'woorden weergegeven.';
   zijkolom.appendChild(bron);
 
   const betaSchuif = paneel.querySelector('#tw-beta');
@@ -127,6 +160,9 @@ export function render(doel) {
   const keerKnop = paneel.querySelector('#tw-keer');
   const eindKnop = paneel.querySelector('#tw-eind');
   const klokVak = klokPaneel.querySelector('#tw-klokken');
+  const zienVak = zienPaneel.querySelector('#tw-zien');
+  const seinAardeKnop = paneel.querySelector('#tw-sein-aarde');
+  const seinSchipKnop = paneel.querySelector('#tw-sein-schip');
 
   function merk(labels, tekst, x, y, kleur, opties) {
     const o = opties || {};
@@ -158,11 +194,29 @@ export function render(doel) {
     // Vlak voor en vlak na de omkeer: daartussen zit de sprong
     const voorSprong = F.lorentz(T_keer, beta * T_keer, beta).t / g;
     const naSprong = F.lorentz(T_keer, beta * T_keer, -beta).t / g;
+
+    // --- Wat er werkelijk te zien is -------------------------------------
+    // Het signaal dat de reiziger nu binnenkrijgt vertrok van de aarde op
+    // tAarde - x: het legde precies zijn eigen afstand x af. Uitwerken geeft
+    // t(1-beta) op de heenweg en t(1+beta) - 2*beta*T op de terugweg.
+    const zietAarde = heen ? t * (1 - beta) : t * (1 + beta) - 2 * beta * T_keer;
+    // Andersom: welk moment van het schip ziet de aarde nu? De aarde ziet de
+    // omkeer pas op t = T(1+beta), want dat licht moet nog helemaal terug.
+    const tOmkeerGezien = T_keer * (1 + beta);
+    const tVertrek = t <= tOmkeerGezien
+      ? t / (1 + beta)
+      : (t - 2 * beta * T_keer) / (1 - beta);
+    const xVertrek = tVertrek <= T_keer
+      ? beta * tVertrek
+      : beta * (tTotaal - tVertrek);
     return {
       g: g, tTotaal: tTotaal, t: t, x: x, tau: tau, heen: heen,
       opKeerpunt: opKeerpunt, bNu: bNu, tAarde: tAarde,
       voorSprong: voorSprong, naSprong: naSprong,
       sprong: naSprong - voorSprong,
+      kWeg: F.doppler(beta, false), kNaar: F.doppler(beta, true),
+      zietAarde: zietAarde, tOmkeerGezien: tOmkeerGezien,
+      tVertrek: tVertrek, xVertrek: xVertrek, zietSchip: tVertrek / g,
     };
   }
 
@@ -253,6 +307,61 @@ export function render(doel) {
         cx: schaal.naarX(xk), cy: schaal.naarY(tk), r: 4,
         fill: 'var(--trein)', stroke: 'var(--kaart)', 'stroke-width': 1.2,
       }));
+    }
+
+    // --- De lichtsignalen ----------------------------------------------------
+    // Waar raakt een lichtsignaal dat op aardtijd k vertrekt de reiziger in?
+    // Op de heenweg loopt het hem achterna: t = k/(1-beta). Is hij al gekeerd,
+    // dan komt hij het tegemoet: t = (k + 2*beta*T)/(1+beta).
+    function vangst(k) {
+      const grens = T_keer * (1 - beta);
+      return k <= grens ? k / (1 - beta) : (k + 2 * beta * T_keer) / (1 + beta);
+    }
+    function straal(xa, ta, xb, tb, kleur, dikte, dek) {
+      lijnen.appendChild(T.el('line', {
+        x1: schaal.naarX(xa), y1: schaal.naarY(ta),
+        x2: schaal.naarX(xb), y2: schaal.naarY(tb),
+        stroke: kleur, 'stroke-width': dikte, opacity: dek,
+        'stroke-linecap': 'round',
+      }));
+    }
+    if (toonAarde) {
+      for (let k = 0; k <= o.tTotaal - 1e-9; k += stap) {
+        const tk = vangst(k);
+        if (tk > o.tTotaal + 1e-9) continue;
+        const xk = tk <= T_keer ? beta * tk : beta * (o.tTotaal - tk);
+        straal(0, k, xk, tk, 'var(--blauw)', 1.3, 0.5);
+      }
+      // Het signaal dat op dit moment binnenkomt, dik en zonder doorzicht
+      straal(0, o.zietAarde, o.x, o.t, 'var(--blauw)', 2.4, 0.95);
+      svg.appendChild(T.el('circle', {
+        cx: yAs, cy: schaal.naarY(o.zietAarde), r: 6.5,
+        fill: 'var(--kaart)', stroke: 'var(--blauw)', 'stroke-width': 2.6,
+      }));
+      merk(labels, 'gezien: ' + F.nl(o.zietAarde, 2), yAs - 16,
+           schaal.naarY(o.zietAarde) + 5, 'var(--blauw)',
+           { anker: 'end', grootte: 14.5, gewicht: 650, prioriteit: 78,
+             plekken: [[0, 0], [0, -20], [0, 20], [0, -40], [0, 40], [150, 0]] });
+    }
+    if (toonSchip) {
+      for (let k = stap; k * o.g <= o.tTotaal - 1e-9; k += stap) {
+        const tk = k * o.g;
+        const xk = tk <= T_keer ? beta * tk : beta * (o.tTotaal - tk);
+        straal(xk, tk, 0, tk + xk, 'var(--trein)', 1.3, 0.5);
+      }
+      straal(o.xVertrek, o.tVertrek, 0, o.t, 'var(--trein)', 2.4, 0.95);
+      svg.appendChild(T.el('circle', {
+        cx: schaal.naarX(o.xVertrek), cy: schaal.naarY(o.tVertrek), r: 6.5,
+        fill: 'var(--kaart)', stroke: 'var(--trein)', 'stroke-width': 2.6,
+      }));
+      merk(labels, 'aarde ziet: ' + F.nl(o.zietSchip, 2),
+           schaal.naarX(o.xVertrek) + 15, schaal.naarY(o.tVertrek) + 5, 'var(--trein)',
+           { grootte: 14.5, gewicht: 650, prioriteit: 76,
+             plekken: [[0, 0], [0, -20], [0, 20], [-185, 0], [0, -40], [0, 40],
+                       [-185, -20], [-185, 20], [44, 0], [44, -22], [44, 22],
+                       [-240, 0], [0, -62], [0, 62], [-240, -24], [-240, 24],
+                       [92, 0], [92, -26], [92, 26], [0, -86], [0, 86],
+                       [-300, 0], [140, 0], [-300, 30], [140, 30]] });
     }
 
     // --- Het nu van de reiziger ---------------------------------------------
@@ -361,6 +470,8 @@ export function render(doel) {
     vaan.style.color = o.opKeerpunt ? 'var(--accent)' : 'var(--tekst-zacht)';
     tijdWaarde.textContent = F.nl(o.t, 2) + ' jaar aardtijd';
     vulKlokken(o);
+    vulZien(o);
+    vulVragen(o);
   }
 
   function vulKlokken(o) {
@@ -386,6 +497,118 @@ export function render(doel) {
     klokVak.innerHTML = kaarten + boekhouding;
   }
 
+  /** Wat er daadwerkelijk binnenkomt, tegenover wat er berekend wordt. */
+  function vulZien(o) {
+    const eindReiziger = o.tTotaal / o.g;
+    // De reiziger kijkt de halve reis lang naar een uitgerekt beeld en de
+    // andere halve reis naar een samengeperst beeld; de aarde ziet de omkeer
+    // pas veel later, en kijkt dus veel langer naar het trage beeld.
+    const heenGezien = T_keer * (1 - beta);
+    const terugGezien = o.tTotaal - heenGezien;
+    const deelAarde = o.tOmkeerGezien / o.tTotaal;
+    const kaarten =
+      '<div class="waarden">' +
+      '<div class="waarde-kaart"><div class="k">Aardklok, zoals gezien</div>' +
+      '<div class="v" style="color:var(--blauw)">' + F.nl(o.zietAarde, 2) + '</div></div>' +
+      '<div class="waarde-kaart"><div class="k">Schip, zoals de aarde ziet</div>' +
+      '<div class="v" style="color:var(--trein)">' + F.nl(o.zietSchip, 2) + '</div></div>' +
+      '</div>';
+    const boekhouding =
+      '<div class="boekhouding">' +
+      '<div><span>beeld nu</span><b>' +
+      (o.heen ? F.nl(o.kWeg, 3) + '\u00d7 traag' : F.nl(o.kNaar, 3) + '\u00d7 snel') +
+      '</b></div>' +
+      '<div><span>heenweg: aardtijd gezien</span><b>' + F.nl(heenGezien, 2) + '</b></div>' +
+      '<div><span>terugweg: aardtijd gezien</span><b>' + F.nl(terugGezien, 2) + '</b></div>' +
+      '<div class="som"><span>samen gezien</span><b>' + F.nl(o.tTotaal, 2) + '</b></div>' +
+      '<div class="som"><span>de reiziger zelf</span><b>' + F.nl(eindReiziger, 2) + '</b></div>' +
+      '</div>' +
+      '<p class="duiding">Geen sprong te bekennen: het beeld gaat van ' +
+      F.nl(o.kWeg, 3) + '\u00d7 traag naar ' + F.nl(o.kNaar, 3) + '\u00d7 snel op het moment ' +
+      'dat de reiziger keert, en samen komen die twee stukken uit op de volle ' +
+      F.nl(o.tTotaal, 2) + ' aardjaren. De asymmetrie zit in het kijken zelf: de ' +
+      'reiziger ziet de omkeer halverwege, de aarde pas op t = ' +
+      F.nl(o.tOmkeerGezien, 2) + ' \u2014 ' + F.nl(deelAarde * 100, 0) + '% van de reis. ' +
+      'Daarom ziet de aarde het schip veel l\u00e1nger vertraagd dan andersom, en dat ' +
+      'is precies waar de symmetrie breekt.</p>';
+    zienVak.innerHTML = kaarten + boekhouding;
+  }
+
+  /** De vragen die bij dit diagram horen, met de getallen van nu erin. */
+  function vulVragen(o) {
+    const eindReiziger = o.tTotaal / o.g;
+    const kaarten = [
+      ['Waarom is de reis niet symmetrisch?',
+       'de aarde blijft in \u00e9\u00e9n kader, de reiziger niet',
+       '\u03b3 = ' + F.nl(o.g, 3) + ', dus ' + F.nl(o.tTotaal, 2) + ' tegen ' +
+       F.nl(eindReiziger, 2) + ' jaar',
+       'Onderweg m\u00e1g de reiziger zeggen dat de aardklok achterloopt, en de aarde ' +
+       'mag hetzelfde zeggen over hem. Dat is geen tegenspraak zolang ze uit ' +
+       'elkaar gaan. Maar om terug te komen moet er \u00e9\u00e9n van de twee van kader ' +
+       'wisselen, en dat doet alleen de reiziger. Die wisseling is te voelen \u2014 hij ' +
+       'wordt in zijn stoel gedrukt \u2014 en daarmee is de symmetrie weg.'],
+      ['Wat is die sprong precies?',
+       'sprong = 2\u00b7\u03b2\u00b2\u00b7T',
+       '2 \u00b7 ' + F.nl(beta * beta, 3) + ' \u00b7 ' + F.nl(T_keer, 1) + ' = ' +
+       F.nl(o.sprong, 2) + ' jaar',
+       'V\u00f3\u00f3r de omkeer noemt de reiziger aardjaar ' + F.nl(o.voorSprong, 2) +
+       ' "nu"; erna aardjaar ' + F.nl(o.naSprong, 2) + '. Hij is geen seconde ' +
+       'ouder geworden, maar zijn nu-lijn is gekanteld, en die snijdt de ' +
+       'wereldlijn van de aarde nu ergens anders. De sprong is een verandering ' +
+       'in de indeling van de ruimtetijd, niet iets wat op aarde gebeurt.'],
+      ['Waarom springt het beeld dan niet mee?',
+       'k = \u221a((1\u2212\u03b2)/(1+\u03b2)) \u2192 \u221a((1+\u03b2)/(1\u2212\u03b2))',
+       F.nl(o.kWeg, 3) + ' \u2192 ' + F.nl(o.kNaar, 3) +
+       ' (product ' + F.nl(o.kWeg * o.kNaar, 1) + ')',
+       'Licht dat al onderweg is, blijft onderweg. Op het moment van de omkeer ' +
+       'verandert alleen het tempo waarin de beelden binnenkomen: van ' +
+       F.nl(o.kWeg, 3) + '\u00d7 naar ' + F.nl(o.kNaar, 3) + '\u00d7. Het beeld zelf loopt ' +
+       'gewoon door waar het was. Dat is het verschil tussen wat je berekent \u2014 ' +
+       'waar corrigeer ik de lichtlooptijd weg \u2014 en wat er in je oog valt.'],
+      ['Waarom klopt de optelsom van de beelden?',
+       '(T/\u03b3)\u00b7k_weg + (T/\u03b3)\u00b7k_naar = 2T',
+       F.nl(T_keer / o.g, 2) + '\u00b7' + F.nl(o.kWeg, 3) + ' + ' +
+       F.nl(T_keer / o.g, 2) + '\u00b7' + F.nl(o.kNaar, 3) + ' = ' + F.nl(o.tTotaal, 2),
+       'De reiziger kijkt op zijn eigen klok even lang naar het ene als naar het ' +
+       'andere beeld: ' + F.nl(T_keer / o.g, 2) + ' jaar elk. De twee ' +
+       'dopplerfactoren zijn elkaars omgekeerde, en opgeteld leveren ze precies ' +
+       '2\u03b3 op. Vermenigvuldig dat met T/\u03b3 en je houdt 2T over \u2014 elke tik van de ' +
+       'aardklok is \u00e9\u00e9n keer gezien, geen enkele twee keer, geen enkele gemist.'],
+      ['Waarom duurt het trage beeld voor de aarde zoveel langer?',
+       'de aarde ziet de omkeer pas op t = T(1+\u03b2)',
+       F.nl(T_keer, 1) + ' \u00b7 ' + F.nl(1 + beta, 2) + ' = ' +
+       F.nl(o.tOmkeerGezien, 2) + ' van de ' + F.nl(o.tTotaal, 2) + ' jaar',
+       'Het licht van de omkeer moet nog de hele afstand ' +
+       F.nl(beta * T_keer, 2) + ' terugleggen. De aarde ziet het schip dus ' +
+       F.nl(o.tOmkeerGezien, 2) + ' jaar lang vertraagd en maar ' +
+       F.nl(o.tTotaal - o.tOmkeerGezien, 2) + ' jaar versneld. De reiziger ' +
+       'daarentegen ziet allebei precies even lang. Dezelfde dopplerfactoren, ' +
+       'heel andere verdeling \u2014 en dat is de hele paradox.'],
+      ['Wat is het verschil tussen "berekend" en "gezien"?',
+       'gezien = berekend \u2212 lichtlooptijd',
+       'nu: gezien ' + F.nl(o.zietAarde, 2) + ' tegen berekend ' +
+       F.nl(o.tAarde, 2),
+       'Wat je ziet komt met vertraging binnen: het licht moest eerst de afstand ' +
+       'overbruggen. Trek je die looptijd eraf, dan hou je over wat er "nu" op ' +
+       'aarde gebeurt volgens jouw kader \u2014 dat is de rode lijn. Die aftreksom ' +
+       'hangt af van je kader, en daarom springt het berekende getal bij de ' +
+       'omkeer wel en het geziene niet.'],
+    ];
+    vragenVak.innerHTML = kaarten.map(function (k, i) {
+      return '<details class="formule"' + (openVragen.has(i) ? ' open' : '') +
+        ' data-nr="' + i + '"><summary><span class="naam">' + k[0] + '</span></summary>' +
+        '<div class="formule-inhoud"><div class="formule-regel">' + k[1] + '</div>' +
+        '<div class="som">' + k[2] + '</div>' +
+        '<p class="waarom">' + k[3] + '</p></div></details>';
+    }).join('');
+    vragenVak.querySelectorAll('details').forEach(function (d) {
+      d.addEventListener('toggle', function () {
+        const nr = Number(d.getAttribute('data-nr'));
+        if (d.open) openVragen.add(nr); else openVragen.delete(nr);
+      });
+    });
+  }
+
   // --- Bediening ----------------------------------------------------------
   function zet(f) {
     fractie = f;
@@ -409,6 +632,16 @@ export function render(doel) {
   beginKnop.addEventListener('click', function () { zet(0); });
   keerKnop.addEventListener('click', function () { zet(0.5); });
   eindKnop.addEventListener('click', function () { zet(1); });
+  seinAardeKnop.addEventListener('click', function () {
+    toonAarde = !toonAarde;
+    seinAardeKnop.classList.toggle('aan', toonAarde);
+    teken();
+  });
+  seinSchipKnop.addEventListener('click', function () {
+    toonSchip = !toonSchip;
+    seinSchipKnop.classList.toggle('aan', toonSchip);
+    teken();
+  });
   speelKnop.addEventListener('click', function () {
     speelt = !speelt;
     speelKnop.classList.toggle('aan', speelt);
