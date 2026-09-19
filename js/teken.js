@@ -105,6 +105,28 @@ export function maakLabelPlaatser({ minAfstand = 4, tekenBreedteFactor = 0.58 } 
     },
 
     /**
+     * Markeer een schuine lijn als bezet, bijvoorbeeld een lichtlijn of een
+     * gekantelde as. Eén rechthoek om de hele lijn zou het halve diagram
+     * bezet verklaren, dus de lijn wordt in stukjes gehakt die elk hun eigen
+     * vakje krijgen. Dat volgt de schuinte ruim genoeg om labels weg te
+     * houden, zonder de ruimte ernaast op te geven.
+     */
+    blokkeerSchuin({ x1, y1, x2, y2, dikte = 14, stappen = null }) {
+      const h = dikte / 2;
+      const lengte = Math.hypot(x2 - x1, y2 - y1);
+      const aantal = Math.max(1, stappen || Math.ceil(lengte / dikte));
+      for (let i = 0; i < aantal; i++) {
+        const a = i / aantal, b = (i + 1) / aantal;
+        const ax = x1 + (x2 - x1) * a, ay = y1 + (y2 - y1) * a;
+        const bx = x1 + (x2 - x1) * b, by = y1 + (y2 - y1) * b;
+        blokkades.push({
+          links: Math.min(ax, bx) - h, rechts: Math.max(ax, bx) + h,
+          boven: Math.min(ay, by) - h, onder: Math.max(ay, by) + h,
+        });
+      }
+    },
+
+    /**
      * Zet een label in de wachtrij. Plaatsing gebeurt pas bij oplossen(),
      * zodat labels met hoge prioriteit altijd voorrang krijgen ongeacht
      * de volgorde waarin ze zijn toegevoegd.
@@ -210,14 +232,20 @@ export function worldline(schaal, { beta, x0 = 0, t0 = 0, kleur, dikte = 2, stre
   });
 }
 
-/** Tekent een gelijktijdigheidslijn (helling beta) door een punt. */
-export function nuLijn(schaal, { beta, x0 = 0, t0 = 0, kleur, dikte = 1.5, streep = '8 5' }) {
+/**
+ * Tekent een gelijktijdigheidslijn (helling beta) door een punt.
+ * Standaard van rand tot rand; met xVan/xTot kap je de lijn af, bijvoorbeeld
+ * om hem in de toekomst-helft te houden.
+ */
+export function nuLijn(schaal, { beta, x0 = 0, t0 = 0, kleur, dikte = 1.5, streep = '8 5', xVan = null, xTot = null }) {
   const [xMin, xMax] = schaal.xBereik;
-  const ta = t0 + beta * (xMin - x0);
-  const tb = t0 + beta * (xMax - x0);
+  const xa = xVan === null ? xMin : xVan;
+  const xb = xTot === null ? xMax : xTot;
+  const ta = t0 + beta * (xa - x0);
+  const tb = t0 + beta * (xb - x0);
   return el('line', {
-    x1: schaal.naarX(xMin), y1: schaal.naarY(ta),
-    x2: schaal.naarX(xMax), y2: schaal.naarY(tb),
+    x1: schaal.naarX(xa), y1: schaal.naarY(ta),
+    x2: schaal.naarX(xb), y2: schaal.naarY(tb),
     stroke: kleur, 'stroke-width': dikte, 'stroke-dasharray': streep,
   });
 }

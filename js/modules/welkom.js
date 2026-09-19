@@ -111,24 +111,50 @@ export function render(doel) {
     labels.voegToe({
       tekst: 'ct', x: yAs + 15, y: schaal.naarY(tMax) + 17,
       grootte: 17, kleur: 'var(--perron)', gewicht: 650, prioriteit: 95,
+      // Boven dit label is geen ruimte meer, dus opzij of omlaag uitwijken
+      verschuif: [[0, 0], [-52, 0], [0, 20], [-52, 20]],
     });
 
-    // Trein-assen (door de oorsprong, beide richtingen)
+    // Trein-assen: alleen vanaf de oorsprong naar één kant. Doorgetrokken
+    // naar linksonder zouden ze het verleden-deel vullen zonder iets toe te
+    // voegen; zo blijft te zien dat beide assen in de oorsprong beginnen.
     var treinAssen = [
-      { dx: xMax, dt: xMax * beta, naam: "x'" },
-      { dx: tMax * beta, dt: tMax, naam: "ct'" },
+      { dx: 1, dt: beta, naam: "x'" },
+      { dx: beta, dt: 1, naam: "ct'" },
     ];
     treinAssen.forEach(function (as) {
+      // Oprekken tot de eerste rand van het tekenvlak, niet verder
+      const rek = Math.min(xMax / as.dx, tMax / as.dt);
+      const ex = as.dx * rek, et = as.dt * rek;
       svg.appendChild(T.el('line', {
-        x1: schaal.naarX(-as.dx), y1: schaal.naarY(-as.dt),
-        x2: schaal.naarX(as.dx), y2: schaal.naarY(as.dt),
+        x1: yAs, y1: xAs,
+        x2: schaal.naarX(ex), y2: schaal.naarY(et),
         stroke: 'var(--trein)', 'stroke-width': 2.2,
       }));
+      // Ook deze assen blokkeren, anders lopen de bredere tijdlabels erover
+      labels.blokkeerSchuin({
+        x1: yAs, y1: xAs, x2: schaal.naarX(ex), y2: schaal.naarY(et), dikte: 10,
+      });
+      // Het label komt loodrecht naast het uiteinde te staan. Recht erboven zou
+      // bij een steile as buiten het diagram vallen, en dan is het onleesbaar
+      // zonder dat de labelplaatser dat merkt.
+      const lx = schaal.naarX(ex) - yAs, ly = schaal.naarY(et) - xAs;
+      const lengte = Math.hypot(lx, ly) || 1;
       labels.voegToe({
-        tekst: as.naam, x: schaal.naarX(as.dx) - 6, y: schaal.naarY(as.dt) - 11,
+        tekst: as.naam,
+        x: schaal.naarX(ex) + (ly / lengte) * 24,
+        // Niet zo hoog dat het tekstvak boven de viewBox uit steekt
+        y: Math.max(schaal.naarY(et) - (lx / lengte) * 24 + 5, 17),
         grootte: 17, kleur: 'var(--trein)', anker: 'end', gewicht: 650, prioriteit: 90,
+        // Niet verder omhoog uitwijken, wel naar beide kanten en omlaag
+        verschuif: [[0, 0], [-12, 0], [14, 0], [-24, 0], [28, 0], [-36, 0], [42, 0],
+                    [56, 0], [70, 0], [84, 0], [-48, 0], [0, 22], [-24, 22], [24, 22]],
       });
     });
+
+    // Hoeveel pixels is één eenheid? Nodig om labels langs een schuine as
+    // te laten uitwijken: hoger betekent daar ook verder naar rechts.
+    const pxPerT = schaal.naarY(0) - schaal.naarY(1);
 
     // Tijdtikken op de ct-as
     const stap = F.netteStap(tMax / 3);
@@ -153,10 +179,51 @@ export function render(doel) {
         cx: schaal.naarX(xg), cy: schaal.naarY(t), r: 5,
         fill: 'var(--trein)', stroke: 'var(--kaart)', 'stroke-width': 1.5,
       }));
+      // Beide klokken naast elkaar: wat het perron meet, en wat de trein meet.
+      // Dit label is breed, en de wig waarin het moet staan is dat lang niet
+      // altijd: bij lage snelheid knijpt de x'-as hem dicht, bij hoge snelheid
+      // de ct-as. Uitwijken gaat daarom langs de ct'-as omhoog, om beurten aan
+      // de rechter- en de linkerkant, want hoe hoger, hoe ruimer het wordt.
+      const labelTekst = 'ct=' + F.nl(t, 1) + ' \u2192 \u03c4=' + F.nl(tau, 2);
+      // Zelfde breedteschatting als de labelplaatser zelf gebruikt
+      const labelBreed = labelTekst.length * 14 * 0.58;
+      const labelX = schaal.naarX(xg) + 12, labelY = schaal.naarY(t) + 5;
+      // De as staat schuin: boven het label ligt hij verder naar rechts dan
+      // eronder, dus elke kant rekent met zijn eigen rand van het tekstvak.
+      function asBij(dy, rand) {
+        return schaal.naarX(beta * (t - (dy + rand) / pxPerT));
+      }
+      // Ruim om de as heen: de blokkades volgen de schuinte in stukjes, dus
+      // vlak langs de lijn rekenen valt altijd net te krap uit.
+      const asRuim = 34;
+      function rechtsVanAs(dy) { return asBij(dy, -11) + asRuim - labelX; }
+      function linksVanAs(dy) {
+        // Niet tot over de ct-as heen schuiven
+        const links = Math.max(asBij(dy, 4) - asRuim - labelBreed, yAs + 14);
+        return links - labelX;
+      }
+      // Laatste uitweg: net voorbij de x'-as, in de elders-zone. Daar is het
+      // altijd leeg en blijft het label op dezelfde hoogte als zijn stip.
+      function voorbijXAs(dy) {
+        const tBoven = schaal.vanY(labelY + dy - 11) + 20 / pxPerT;
+        return schaal.naarX(tBoven / beta) + 12 - labelX;
+      }
+      // Eerst alles op de hoogte van de stip zelf — daar hoort het label bij —
+      // en pas als niets daar past trapsgewijs langs de as omhoog.
+      const uitwijk = [
+        [0, 0], [rechtsVanAs(0), 0], [linksVanAs(0), 0], [voorbijXAs(0), 0],
+      ];
+      for (let n = 1; n <= 4; n++) {
+        const dy = -20 * n;
+        uitwijk.push([rechtsVanAs(dy), dy]);   // rechts van de ct'-as
+        uitwijk.push([linksVanAs(dy), dy]);    // links ervan
+        uitwijk.push([voorbijXAs(dy), dy]);    // voorbij de x'-as
+      }
       labels.voegToe({
-        tekst: '\u03c4=' + F.nl(tau, 2),
-        x: schaal.naarX(xg) + 12, y: schaal.naarY(t) + 5,
-        grootte: 14, kleur: 'var(--trein)', gewicht: 600, prioriteit: 55,
+        tekst: labelTekst, x: labelX, y: labelY,
+        // Gaat vóór de zonenamen: die kunnen makkelijker opzij, dit label niet
+        grootte: 14, kleur: 'var(--trein)', gewicht: 600, prioriteit: 65,
+        verschuif: uitwijk,
       });
     }
 
@@ -177,15 +244,17 @@ export function render(doel) {
       });
     }
 
-    // Gelijktijdigheidslijnen van de trein
+    // Gelijktijdigheidslijnen van de trein, alleen in de toekomst-helft:
+    // afgekapt waar de lijn de x-as kruist en waar hij de bovenrand raakt.
     if (toonNu) {
       for (let t = stap; t <= tMax; t += stap) {
-        [1, -1].forEach(function (richting) {
-          svg.appendChild(T.nuLijn(schaal, {
-            beta: beta, x0: 0, t0: t * richting,
-            kleur: 'var(--trein)', dikte: 0.9, streep: '3 6',
-          }));
-        });
+        const xLinks = Math.max(-xMax, -t / beta);
+        const xRechts = Math.min(xMax, (tMax - t) / beta);
+        if (xRechts <= xLinks) continue;
+        svg.appendChild(T.nuLijn(schaal, {
+          beta: beta, x0: 0, t0: t, xVan: xLinks, xTot: xRechts,
+          kleur: 'var(--trein)', dikte: 0.9, streep: '3 6',
+        }));
       }
     }
 
@@ -194,10 +263,12 @@ export function render(doel) {
       t: 0, x: 0, kleur: 'var(--gebeurtenis)', straal: 7,
     }));
     labels.blokkeer({ links: yAs - 13, boven: xAs - 13, breedte: 26, hoogte: 26 });
+    // Boven de x-as is het druk geworden met de twee trein-assen; eronder is
+    // het nu juist leeg, dus daar staat de oorsprong het rustigst benoemd.
     labels.voegToe({
-      tekst: 'hier en nu', x: yAs + 18, y: xAs - 20,
+      tekst: 'hier en nu', x: yAs + 16, y: xAs + 26,
       grootte: 14, kleur: 'var(--gebeurtenis)', gewicht: 650, prioriteit: 75,
-      verschuif: [[0, 0], [0, -18], [16, -32], [-36, -20]],
+      verschuif: [[0, 0], [0, 20], [-115, 0], [-115, 20]],
     });
 
     // Zones benoemen
