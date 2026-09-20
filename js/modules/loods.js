@@ -25,10 +25,13 @@ const HOOGTE = 940;
 // x-venster, zodat de loods recht boven zijn eigen wereldlijnen staat.
 const MARGE = { links: 72, rechts: 58 };
 
-// Twee banden onder elkaar. In het grote beeld valt het toneel weg en krijgt
-// het diagram het hele vlak.
-const TONEEL = { titel: 28, naam: 50, dak: 72, vloer: 176, maat: 214, grond: 238 };
-const ONDER = { titel: 250, boven: 274, onder: 904, tik: 928 };
+// Drie banden. Bovenaan twee tonelen: hetzelfde moment, maar door elk kader
+// anders doorgesneden. Daaronder het diagram waar die twee sneden vandaan
+// komen. In het grote beeld vallen de tonelen weg en krijgt het diagram alles.
+const TONEEL_A = { titel: 24, naam: 46, dak: 62, vloer: 134, maat: 160 };
+const TONEEL_B = { titel: 190, naam: 212, dak: 228, vloer: 300, maat: 326 };
+const SCHEIDING = 348;
+const ONDER = { titel: 366, boven: 388, onder: 904, tik: 928 };
 const ONDER_GROOT = { titel: 28, boven: 62, onder: 904, tik: 928 };
 
 /** Dezelfde breedteschatting als de labelplaatser in teken.js. */
@@ -85,13 +88,17 @@ export function render(doel) {
   uitleg.open = true;
   uitleg.innerHTML =
     '<summary>Twee verhalen die allebei waar zijn</summary>' +
-    '<p>In het <b>loodskader</b> is de staaf ingekort en past hij: beide deuren ' +
-    'kunnen tegelijk even dicht met de staaf erin. In het <b>staafkader</b> is de ' +
-    'loods ingekort en past hij niet \u2014 maar daar gaan de deuren ook niet tegelijk ' +
-    'dicht. Eerst de uitgang, ruim voordat de staaf er is; veel later de ingang, ' +
-    'als de staaf er al voorbij is. Niemand raakt iets. Wissel van kader en volg ' +
-    'de twee gebeurtenissen in het diagram: ze wisselen van <b>volgorde</b>, niet ' +
-    'van plaats.</p>' +
+    '<p>Bovenaan staan <b>allebei de kaders op hetzelfde moment</b>. Dat moment is ' +
+    '\u00e9\u00e9n gebeurtenis: de klok op de punt van de staaf wijst \u03c4 aan. De loods legt ' +
+    'daar haar eigen nu doorheen en komt op t = \u03b3\u00b7\u03c4; de staaf legt er het hare ' +
+    'doorheen en komt op t\u2032 = \u03c4. Zelfde moment, andere snede \u2014 en dus twee ' +
+    'plaatjes. Boven ziet de loods een ingekorte staaf die p\u00e1st; onder ziet de ' +
+    'staaf een ingekorte loods die veel te klein is. Allebei waar.</p>' +
+    '<p style="margin-top:7px">De deuren verraden het verschil. Druk op ' +
+    '<b>Loods: dicht</b> en kijk naar allebei de tonelen: boven staan beide ' +
+    'schuiven dicht met de staaf erin, onder staat er geen \u00e9\u00e9n dicht. Met ' +
+    '<b>Staaf: uitgang</b> en <b>Staaf: ingang</b> zie je die twee sluitingen ' +
+    'los van elkaar langskomen.</p>' +
     '<p style="margin-top:7px">Met <b>Beide kaders</b> staan allebei de sneden in ' +
     '\u00e9\u00e9n diagram. Door dezelfde twee stippen legt de loods \u00e9\u00e9n lijn \u2014 voor haar ' +
     'gebeuren ze tegelijk \u2014 en de staaf twee lijnen, met de hele doorvaart ' +
@@ -136,18 +143,23 @@ export function render(doel) {
     '    <input type="range" id="lo-loods" min="3" max="12" step="0.5" value="6" />' +
     '  </div>' +
     '  <div class="regelaar">' +
-    '    <label for="lo-tijd">Tijd in dit kader: <b id="lo-tijd-w"></b></label>' +
+    '    <label for="lo-tijd">Klok op de punt van de staaf: <b id="lo-tijd-w"></b></label>' +
     '    <input type="range" id="lo-tijd" min="0" max="1" step="0.001" value="0" />' +
     '  </div>' +
     '  <div class="knoppen">' +
     '    <button class="knop" id="lo-speel">Afspelen</button>' +
     '    <button class="knop klein" id="lo-begin">Begin</button>' +
-    '    <button class="knop klein" id="lo-uit">Uitgang dicht</button>' +
-    '    <button class="knop klein" id="lo-in">Ingang dicht</button>' +
     '  </div>' +
     '  <div class="knoppen" style="margin-top:8px">' +
-    '    <button class="knop klein aan" id="lo-kader-loods">Loodskader</button>' +
-    '    <button class="knop klein" id="lo-kader-staaf">Staafkader</button>' +
+    '    <button class="knop klein" id="lo-dicht">Loods: dicht</button>' +
+    '    <button class="knop klein" id="lo-uit">Staaf: uitgang</button>' +
+    '    <button class="knop klein" id="lo-in">Staaf: ingang</button>' +
+    '  </div>' +
+    '  <div class="knoppen" style="margin-top:8px">' +
+    '    <button class="knop klein aan" id="lo-kader-loods">Diagram: loods</button>' +
+    '    <button class="knop klein" id="lo-kader-staaf">Diagram: staaf</button>' +
+    '  </div>' +
+    '  <div class="knoppen" style="margin-top:8px">' +
     '    <button class="knop klein" id="lo-groot">Groot</button>' +
     '    <button class="knop klein aan" id="lo-beide">Beide kaders</button>' +
     '    <button class="knop klein" id="lo-signaal">Signaal</button>' +
@@ -192,6 +204,7 @@ export function render(doel) {
   const tijdW = paneel.querySelector('#lo-tijd-w');
   const speelKnop = paneel.querySelector('#lo-speel');
   const beginKnop = paneel.querySelector('#lo-begin');
+  const dichtKnop = paneel.querySelector('#lo-dicht');
   const uitKnop = paneel.querySelector('#lo-uit');
   const inKnop = paneel.querySelector('#lo-in');
   const loodsKaderKnop = paneel.querySelector('#lo-kader-loods');
@@ -271,6 +284,12 @@ export function render(doel) {
     // Wanneer staat elke deur dicht, in de tijd van het gekozen kader?
     const uitDicht = [naar(tc - duur / 2, D).t, naar(tc + duur / 2, D).t];
     const inDicht = [naar(tc - duur / 2, 0).t, naar(tc + duur / 2, 0).t];
+    // En hetzelfde op de klok van elk kader apart, voor de twee tonelen. In de
+    // loods gaan beide schuiven tegelijk; voor de staaf liggen ze gamma*beta*D
+    // uit elkaar, en dat verschil is precies wat de tonelen laten zien.
+    const loodsSchuif = [tc - duur / 2, tc + duur / 2];
+    const staafUitSchuif = [g * (tc - duur / 2 - beta * D), g * (tc + duur / 2 - beta * D)];
+    const staafInSchuif = [g * (tc - duur / 2), g * (tc + duur / 2)];
 
     // Het lichtsignaal van de uitgangssluiting naar de achterkant: eerder kan
     // de achterkant er niets van weten, en dus ook niet remmen of uitwijken.
@@ -311,7 +330,27 @@ export function render(doel) {
       ctMin -= extra; ctMax += extra;
     }
 
-    const tNu = ctMin + fractie * (ctMax - ctMin);
+    // --- De klok die allebei de tonelen aanstuurt --------------------------
+    // Het anker is de klok op de voorkant van de staaf. Die ene gebeurtenis
+    // ligt in het loodskader op t = gamma*tau en in het staafkader op
+    // t' = tau, en door dat punt legt elk kader zijn eigen nu-lijn. Beide
+    // tonelen zijn dus een snede door hetzelfde moment, en het verschil
+    // tussen die twee sneden is precies wat er te zien moet zijn.
+    const tauLoodsEind = tUit / g;              // achterkant voorbij de uitgang
+    const tauStaafEind = (Dkort + L) / beta;    // loods helemaal voorbij de staaf
+    // De schuif moet allebei de verhalen halen, inclusief de late sluiting van
+    // de ingang in het staafkader.
+    const tauMax = Math.max(tauLoodsEind, tauStaafEind, g * tc * 1.02) * 1.05;
+    // Bij nul staat de punt van de staaf precies bij de ingang: een schone
+    // start. Een aanloopje ervoor zou in het loodskader al onder de onderrand
+    // van het diagram liggen, en dan begint de module met "buiten beeld".
+    const tauMin = 0;
+    const tau = tauMin + fractie * (tauMax - tauMin);
+    const tLoods = g * tau;    // wat de loods op dit moment op haar klok heeft
+    const tStaaf = tau;        // en wat de staaf op de hare heeft
+    // De tijd van het kader waarin het diagram getekend wordt
+    const tNu = kader === 'loods' ? tLoods : tStaaf;
+
     /** Waar staat een object met snelheid v op tijdstip t in dit kader? */
     function plek(p, v, t) { return p.x + v * (t - p.t); }
 
@@ -328,10 +367,11 @@ export function render(doel) {
       gDeurUit: gDeurUit, gDeurIn: gDeurIn, gVoorUit: gVoorUit,
       gAchterIn: gAchterIn, gSigStart: gSigStart, gSigEind: gSigEind,
       uitDicht: uitDicht, inDicht: inDicht,
+      loodsSchuif: loodsSchuif, staafUitSchuif: staafUitSchuif,
+      staafInSchuif: staafInSchuif,
       xMin: xMin, xMax: xMax, ctMin: ctMin, ctMax: ctMax, tNu: tNu,
-      // Wat meet dit kader zelf aan de twee voorwerpen?
-      hierStaaf: kader === 'loods' ? Lkort : L,
-      hierLoods: kader === 'loods' ? D : Dkort,
+      tau: tau, tauMin: tauMin, tauMax: tauMax, tLoods: tLoods, tStaaf: tStaaf,
+      tauLoodsEind: tauLoodsEind, tauStaafEind: tauStaafEind,
       // Het verschil tussen de twee sluitingen, in de tijd van dit kader
       sluitVerschil: gDeurIn.t - gDeurUit.t,
     };
@@ -368,142 +408,191 @@ export function render(doel) {
     defs.appendChild(clip);
     svg.appendChild(defs);
 
-    if (!groot) tekenToneel(labels, schaal, o);
+    if (!groot) tekenTonelen(labels, o);
     tekenDiagram(labels, schaal, o, b);
 
     svg.appendChild(labels.tekenAlles());
 
     // --- Vaantje en schuifwaarde -------------------------------------------
-    const uitNu = dicht(o.uitDicht, o.tNu), inNu = dicht(o.inDicht, o.tNu);
-    let stand;
-    if (uitNu && inNu) stand = 'beide deuren dicht';
-    else if (uitNu) stand = 'alleen de uitgang dicht';
-    else if (inNu) stand = 'alleen de ingang dicht';
-    else stand = kader === 'loods' ? 'deuren open' : 'deuren open';
-    vaan.textContent = stand;
-    vaan.style.color = (uitNu || inNu) ? 'var(--gebeurtenis)' : 'var(--tekst-zacht)';
-    tijdW.textContent = F.nl(o.tNu, 2) + (kader === 'loods' ? ' m ct' : ' m ct\u2032');
+    // Het vaantje meldt per kader wat er op dit moment dicht staat. Dat de twee
+    // kaders daar verschillende dingen zeggen is geen fout maar de kern.
+    const aDicht = dicht(o.loodsSchuif, o.tLoods);
+    const bUit = dicht(o.staafUitSchuif, o.tStaaf);
+    const bIn = dicht(o.staafInSchuif, o.tStaaf);
+    const stukken = [];
+    if (aDicht) stukken.push('loods: beide deuren dicht');
+    if (bUit) stukken.push('staaf: uitgang dicht');
+    if (bIn) stukken.push('staaf: ingang dicht');
+    vaan.textContent = stukken.length ? stukken.join(' \u00b7 ') : 'alle deuren open';
+    vaan.style.color = stukken.length ? 'var(--gebeurtenis)' : 'var(--tekst-zacht)';
+    tijdW.textContent = '\u03c4 = ' + F.nl(o.tau, 2) + ' m';
     vulWaarden(o);
     vulVolgorde(o);
     vulVragen(o);
   }
-
   /**
-   * Het toneel: de loods en de staaf van bovenaf, op het gekozen moment.
-   * Het x-venster is hetzelfde als dat van het diagram eronder, dus alles
-   * staat recht boven zijn eigen wereldlijn.
+   * De twee tonelen samen, op hetzelfde moment.
+   *
+   * Allebei zijn ze een snede door dezelfde gebeurtenis: de klok op de
+   * voorkant van de staaf die tau aanwijst. Het loodskader snijdt daar
+   * horizontaal doorheen op t = gamma*tau, het staafkader onder een hoek op
+   * t' = tau. Daarom zien de twee plaatjes er anders uit terwijl het om
+   * hetzelfde moment gaat.
+   *
+   * Beide tonelen tekenen met dezelfde meters per pixel, anders zou je de
+   * lengtes niet naast elkaar mogen leggen — en juist dat is de bedoeling.
+   * Alleen hun venster verschilt: elk kijkt naar zijn eigen stuk toneel.
    */
-  function tekenToneel(labels, schaal, o) {
-    const xIngang = o.plek(o.pIngang, o.vLoods, o.tNu);
-    const xUitgang = o.plek(o.pUitgang, o.vLoods, o.tNu);
-    const xVoor = o.plek(o.pVoor, o.vStaaf, o.tNu);
-    const xAchter = o.plek(o.pAchter, o.vStaaf, o.tNu);
-    const uitNu = dicht(o.uitDicht, o.tNu), inNu = dicht(o.inDicht, o.tNu);
+  function tekenTonelen(labels, o) {
+    const tekenB = BREEDTE - MARGE.links - MARGE.rechts;
+    // Wat moet elk toneel kunnen laten zien? De loods met de staaf ervoor en
+    // erna, en de staaf met de loods ervoor en erna.
+    const spanA = D + 2 * o.Lkort + 2.4;
+    const spanB = L + 2 * o.Dkort + 2.4;
+    const span = Math.max(spanA, spanB);
+    const pxPerM = tekenB / span;
+    // Elk venster om zijn eigen midden heen, allebei even breed
+    const middenA = D / 2, middenB = -L / 2;
+    const vensterA = { links: middenA - span / 2 };
+    const vensterB = { links: middenB - span / 2 };
 
-    // Het vaantje staat linksboven over de tekening heen, dus begint deze
-    // titel daar rechts van.
-    merk(labels, kader === 'loods' ? 'gezien vanuit de loods' : 'gezien vanuit de staaf',
-         296, TONEEL.titel, 'var(--tekst-zacht)',
-         { grootte: 13, gewicht: 650, prioriteit: 94,
-           plekken: [[0, 0], [0, 16], [-20, 0], [40, 0]] });
+    /** Eén toneel. De posities komen al in meters binnen. */
+    function toneel(band, venster, spul) {
+      const naarX = function (x) { return MARGE.links + (x - venster.links) * pxPerM; };
+      const binnen = [band.titel - 16, band.maat + 16];
 
-    // De grond
+      // Naam en klokstand in één regel rechtsboven. Links staat het vaantje
+      // over de tekening heen, dus daar is geen plek voor een kop.
+      merk(labels, spul.naam + ': ' + spul.klok, BREEDTE - MARGE.rechts, band.titel,
+           spul.klokKleur,
+           { anker: 'end', grootte: 14, gewicht: 700, prioriteit: 96, binnen: binnen,
+             plekken: [[0, 0], [0, 15], [-120, 0]] });
+
+      // De loods: een bak met aan elk uiteinde een schuif
+      const pIn = naarX(spul.ingang), pUit = naarX(spul.uitgang);
+      svg.appendChild(T.el('rect', {
+        x: pIn, y: band.dak, width: Math.max(pUit - pIn, 2),
+        height: band.vloer - band.dak,
+        fill: 'var(--kaart-2)', stroke: 'var(--perron)', 'stroke-width': 2.4,
+      }));
+      labels.blokkeer({ links: pIn, boven: band.dak,
+                        breedte: Math.max(pUit - pIn, 2), hoogte: band.vloer - band.dak });
+      [[pIn, spul.ingangDicht], [pUit, spul.uitgangDicht]].forEach(function (deur) {
+        if (deur[1]) {
+          svg.appendChild(T.el('rect', {
+            x: deur[0] - 4, y: band.dak, width: 8, height: band.vloer - band.dak,
+            fill: 'var(--gebeurtenis)', stroke: 'var(--gebeurtenis)', 'stroke-width': 2,
+          }));
+        } else {
+          [[band.dak, 11], [band.vloer - 11, 11]].forEach(function (stuk) {
+            svg.appendChild(T.el('rect', {
+              x: deur[0] - 3, y: stuk[0], width: 6, height: stuk[1],
+              fill: 'var(--perron)', opacity: 0.55,
+            }));
+          });
+        }
+      });
+
+      // De staaf, afgeknipt op de rand van het toneel
+      const rand = { links: MARGE.links, rechts: BREEDTE - MARGE.rechts };
+      const pA = naarX(spul.achter), pV = naarX(spul.voor);
+      const zichtA = Math.max(pA, rand.links), zichtV = Math.min(pV, rand.rechts);
+      const staafY = (band.dak + band.vloer) / 2 - 10;
+      if (zichtV > zichtA) {
+        svg.appendChild(T.el('rect', {
+          x: zichtA, y: staafY, width: Math.max(zichtV - zichtA, 2), height: 20, rx: 6,
+          fill: 'var(--trein-vlak)', stroke: 'var(--trein)', 'stroke-width': 2.6,
+        }));
+        labels.blokkeer({ links: zichtA, boven: staafY,
+                          breedte: Math.max(zichtV - zichtA, 2), hoogte: 20 });
+      } else {
+        // Helemaal voorbij: zeggen waar hij dan wel is, niet stiekem weglaten
+        const weg = pA > rand.rechts ? spul.achter - venster.links - span
+                                     : venster.links - spul.voor;
+        const naarRechts = pA > rand.rechts;
+        const wegPlekken = [];
+        [0, 20, -20, 40, -40, 62, -62].forEach(function (dy) {
+          [0, -60, -130, -210, -300].forEach(function (dx) {
+            wegPlekken.push([naarRechts ? dx : -dx, dy]);
+          });
+        });
+        merk(labels, 'staaf: ' + F.nl(Math.abs(weg), 1) + ' m buiten beeld',
+             naarRechts ? rand.rechts - 6 : rand.links + 6, staafY + 14,
+             'var(--trein)',
+             { anker: naarRechts ? 'end' : 'start', grootte: 13.5, gewicht: 600,
+               prioriteit: 88, binnen: binnen, plekken: wegPlekken });
+      }
+
+      // De pijl onder het voorwerp dat in dit kader beweegt
+      if (Math.abs(spul.vStaaf) > 1e-9 || Math.abs(spul.vLoods) > 1e-9) {
+        const beweegt = Math.abs(spul.vStaaf) > 1e-9;
+        const v = beweegt ? spul.vStaaf : spul.vLoods;
+        const midden = beweegt ? (pA + pV) / 2 : (pIn + pUit) / 2;
+        const px = Math.max(rand.links + 40, Math.min(rand.rechts - 40, midden));
+        const y = band.vloer + 9, eind = px + (v > 0 ? 32 : -32);
+        svg.appendChild(T.el('line', {
+          x1: px, y1: y, x2: eind, y2: y,
+          stroke: beweegt ? 'var(--trein)' : 'var(--perron)', 'stroke-width': 2,
+        }));
+        svg.appendChild(T.el('polygon', {
+          points: [eind + ',' + y, (eind - (v > 0 ? 9 : -9)) + ',' + (y - 4),
+                   (eind - (v > 0 ? 9 : -9)) + ',' + (y + 4)].join(' '),
+          fill: beweegt ? 'var(--trein)' : 'var(--perron)',
+        }));
+      }
+
+      /** Een maatlijn met de lengte die dit kader meet. */
+      function maat(x1, x2, y, tekst, kleur, prioriteit) {
+        const a = Math.max(Math.min(x1, x2), rand.links);
+        const c = Math.min(Math.max(x1, x2), rand.rechts);
+        if (c - a < 4) return;
+        svg.appendChild(T.el('line', { x1: a, y1: y, x2: c, y2: y,
+                                       stroke: kleur, 'stroke-width': 1.4 }));
+        [a, c].forEach(function (px) {
+          svg.appendChild(T.el('line', { x1: px, y1: y - 5, x2: px, y2: y + 5,
+                                         stroke: kleur, 'stroke-width': 1.4 }));
+        });
+        merk(labels, tekst, (a + c) / 2, y - 12, kleur,
+             { anker: 'middle', grootte: 14, gewicht: 650, prioriteit: prioriteit,
+               binnen: binnen,
+               plekken: [[0, 0], [0, -17], [0, 21], [0, -34], [-90, 0], [90, 0],
+                         [-90, -17], [90, -17], [-170, 0], [170, 0],
+                         [-170, -17], [170, -17], [-260, 0], [260, 0],
+                         [-260, -17], [260, -17], [0, 38], [-90, 21], [90, 21]] });
+      }
+      maat(pIn, pUit, band.naam, 'loods ' + F.nl(spul.loodsLengte, 2) + ' m',
+           'var(--perron)', 86);
+      maat(pA, pV, band.maat, 'staaf ' + F.nl(spul.staafLengte, 2) + ' m',
+           'var(--trein)', 85);
+    }
+
+    // --- Toneel A: het loodskader, op t = gamma*tau ------------------------
+    const aVoor = beta * o.tLoods, aAchter = aVoor - o.Lkort;
+    toneel(TONEEL_A, vensterA, {
+      naam: 'de loods zegt', klok: 't = ' + F.nl(o.tLoods, 2) + ' m',
+      klokKleur: 'var(--perron)',
+      ingang: 0, uitgang: D, voor: aVoor, achter: aAchter,
+      ingangDicht: dicht(o.loodsSchuif, o.tLoods),
+      uitgangDicht: dicht(o.loodsSchuif, o.tLoods),
+      loodsLengte: D, staafLengte: o.Lkort, vStaaf: beta, vLoods: 0,
+    });
+
+    // --- Toneel B: het staafkader, op t' = tau -----------------------------
+    toneel(TONEEL_B, vensterB, {
+      naam: 'de staaf zegt', klok: 't\u2032 = ' + F.nl(o.tStaaf, 2) + ' m',
+      klokKleur: 'var(--trein)',
+      ingang: -beta * o.tStaaf, uitgang: o.Dkort - beta * o.tStaaf,
+      voor: 0, achter: -L,
+      ingangDicht: dicht(o.staafInSchuif, o.tStaaf),
+      uitgangDicht: dicht(o.staafUitSchuif, o.tStaaf),
+      loodsLengte: o.Dkort, staafLengte: L, vStaaf: 0, vLoods: -beta,
+    });
+
+    // De scheidslijn onder de twee tonelen
     svg.appendChild(T.el('line', {
-      x1: MARGE.links - 10, y1: TONEEL.grond,
-      x2: BREEDTE - MARGE.rechts + 10, y2: TONEEL.grond,
+      x1: MARGE.links - 10, y1: SCHEIDING, x2: BREEDTE - MARGE.rechts + 10, y2: SCHEIDING,
       stroke: 'var(--rand-sterk)', 'stroke-width': 2,
     }));
-
-    // De loods: twee zijwanden en een dak, met de deuren aan de uiteinden
-    const pIn = schaal.naarX(xIngang), pUit = schaal.naarX(xUitgang);
-    svg.appendChild(T.el('rect', {
-      x: pIn, y: TONEEL.dak, width: Math.max(pUit - pIn, 2),
-      height: TONEEL.vloer - TONEEL.dak,
-      fill: 'var(--kaart-2)', stroke: 'var(--perron)', 'stroke-width': 2.4,
-    }));
-    labels.blokkeer({
-      links: pIn, boven: TONEEL.dak,
-      breedte: Math.max(pUit - pIn, 2), hoogte: TONEEL.vloer - TONEEL.dak,
-    });
-    [[pIn, inNu, 'ingang'], [pUit, uitNu, 'uitgang']].forEach(function (deur) {
-      const px = deur[0];
-      if (deur[1]) {
-        // Dicht: een volle schuif over de hele opening
-        svg.appendChild(T.el('rect', {
-          x: px - 4, y: TONEEL.dak, width: 8, height: TONEEL.vloer - TONEEL.dak,
-          fill: 'var(--gebeurtenis)', stroke: 'var(--gebeurtenis)', 'stroke-width': 2,
-        }));
-      } else {
-        // Open: de schuif staat opzij, boven en onder een stompje
-        [[TONEEL.dak, 13], [TONEEL.vloer - 13, 13]].forEach(function (stuk) {
-          svg.appendChild(T.el('rect', {
-            x: px - 3, y: stuk[0], width: 6, height: stuk[1],
-            fill: 'var(--perron)', opacity: 0.55,
-          }));
-        });
-      }
-    });
-
-    // De staaf
-    const pA = schaal.naarX(xAchter), pV = schaal.naarX(xVoor);
-    const staafY = (TONEEL.dak + TONEEL.vloer) / 2 - 11;
-    svg.appendChild(T.el('rect', {
-      x: pA, y: staafY, width: Math.max(pV - pA, 2), height: 22, rx: 7,
-      fill: 'var(--trein-vlak)', stroke: 'var(--trein)', 'stroke-width': 2.6,
-    }));
-    labels.blokkeer({
-      links: pA, boven: staafY, breedte: Math.max(pV - pA, 2), hoogte: 22,
-    });
-    // Een pijl die aangeeft welke kant het bewegende voorwerp op gaat. Hij
-    // staat onder de vloer, want voor de staaf langs zou hij door een dichte
-    // deur heen steken.
-    function richting(px, v, kleur) {
-      if (Math.abs(v) < 1e-9) return;
-      const y = TONEEL.vloer + 9;
-      const eind = px + (v > 0 ? 34 : -34);
-      svg.appendChild(T.el('line', {
-        x1: px, y1: y, x2: eind, y2: y, stroke: kleur, 'stroke-width': 2,
-      }));
-      svg.appendChild(T.el('polygon', {
-        points: [eind + ',' + y, (eind - (v > 0 ? 9 : -9)) + ',' + (y - 4),
-                 (eind - (v > 0 ? 9 : -9)) + ',' + (y + 4)].join(' '),
-        fill: kleur,
-      }));
-    }
-    richting((pA + pV) / 2, o.vStaaf, 'var(--trein)');
-    richting((pIn + pUit) / 2, o.vLoods, 'var(--perron)');
-
-    // Maatlijnen met de lengte die dit kader meet
-    function maat(x1, x2, y, tekst, kleur, prioriteit) {
-      const a = Math.min(x1, x2), c = Math.max(x1, x2);
-      svg.appendChild(T.el('line', {
-        x1: a, y1: y, x2: c, y2: y, stroke: kleur, 'stroke-width': 1.4,
-      }));
-      [a, c].forEach(function (px) {
-        svg.appendChild(T.el('line', {
-          x1: px, y1: y - 5, x2: px, y2: y + 5, stroke: kleur, 'stroke-width': 1.4,
-        }));
-      });
-      merk(labels, tekst, (a + c) / 2, y - 8, kleur,
-           { anker: 'middle', grootte: 14, gewicht: 650, prioriteit: prioriteit,
-             plekken: [[0, 0], [0, -18], [0, 22], [0, -36], [0, 40],
-                       [-90, 0], [90, 0], [-90, -18], [90, -18]] });
-    }
-    maat(pIn, pUit, TONEEL.naam, 'loods ' + F.nl(o.hierLoods, 2) + ' m',
-         'var(--perron)', 86);
-    maat(pA, pV, TONEEL.maat, 'staaf ' + F.nl(o.hierStaaf, 2) + ' m',
-         'var(--trein)', 85);
-
-    // Het oordeel van dit kader
-    const pastHier = o.hierStaaf <= o.hierLoods + 1e-12;
-    merk(labels,
-         pastHier
-           ? 'hier past de staaf: ' + F.nl(o.hierStaaf, 2) + ' m in ' + F.nl(o.hierLoods, 2) + ' m'
-           : 'hier past de staaf niet: ' + F.nl(o.hierStaaf, 2) + ' m in ' + F.nl(o.hierLoods, 2) + ' m',
-         BREEDTE - MARGE.rechts, TONEEL.titel,
-         pastHier ? 'var(--eigentijd)' : 'var(--gebeurtenis)',
-         { anker: 'end', grootte: 14.5, gewicht: 700, prioriteit: 93,
-           plekken: [[0, 0], [0, 17]] });
   }
 
   /** Het Minkowski-diagram in het gekozen kader. */
@@ -687,21 +776,45 @@ export function render(doel) {
                 'var(--blauw)', 74, bAnder, xVoorNu, o.tNu,
                 bAnder >= 0 ? 0.78 : 0.22);
 
-    // Het nu van dit kader zelf: horizontaal
-    lijnen.appendChild(T.el('line', {
-      x1: linkerRand, y1: schaal.naarY(o.tNu), x2: rechterRand, y2: schaal.naarY(o.tNu),
-      stroke: 'var(--gebeurtenis)', 'stroke-width': 2.2,
-    }));
-    labels.blokkeerLijn({
-      x1: linkerRand, y1: schaal.naarY(o.tNu), x2: rechterRand, y2: schaal.naarY(o.tNu),
-      dikte: 12,
-    });
-    // De nu-lijn is zelf geblokkeerd, dus moet het label er ruim boven of ruim
-    // onder blijven: vlak ernaast botst het altijd met zijn eigen lijn.
-    merkD('nu', linkerRand + 7, schaal.naarY(o.tNu) - 16, 'var(--gebeurtenis)',
-          { grootte: 13.5, gewicht: 700, prioriteit: 60,
-           plekken: [[0, 0], [0, -9], [0, 32], [0, 41], [0, -22], [44, 0], [44, 32],
-                     [92, 0], [92, 32], [0, -35], [0, 54], [140, 0]] });
+    // Het nu van dit kader zelf: horizontaal. Bij een stand van de klok die ver
+    // buiten het verhaal van dit kader ligt, valt die lijn buiten het diagram.
+    // Dan komt er een pijltje aan de rand met het getal erbij: niets tekenen
+    // zou lijken alsof er op dat moment geen nu is.
+    const nuBinnen = o.tNu >= o.ctMin && o.tNu <= o.ctMax;
+    if (nuBinnen) {
+      lijnen.appendChild(T.el('line', {
+        x1: linkerRand, y1: schaal.naarY(o.tNu), x2: rechterRand, y2: schaal.naarY(o.tNu),
+        stroke: 'var(--gebeurtenis)', 'stroke-width': 2.2,
+      }));
+      labels.blokkeerLijn({
+        x1: linkerRand, y1: schaal.naarY(o.tNu), x2: rechterRand, y2: schaal.naarY(o.tNu),
+        dikte: 12,
+      });
+      // De nu-lijn is zelf geblokkeerd, dus moet het label er ruim boven of ruim
+      // onder blijven: vlak ernaast botst het altijd met zijn eigen lijn.
+      merkD('nu', linkerRand + 7, schaal.naarY(o.tNu) - 16, 'var(--gebeurtenis)',
+            { grootte: 13.5, gewicht: 700, prioriteit: 60,
+              plekken: [[0, 0], [0, -9], [0, 32], [0, 41], [0, -22], [44, 0], [44, 32],
+                        [92, 0], [92, 32], [0, -35], [0, 54], [140, 0]] });
+    } else {
+      const naarBoven = o.tNu > o.ctMax;
+      const y = naarBoven ? b.boven + 14 : b.onder - 14;
+      svg.appendChild(T.el('polygon', {
+        points: [(linkerRand + 16) + ',' + (y + (naarBoven ? -10 : 10)),
+                 (linkerRand + 8) + ',' + (y + (naarBoven ? 5 : -5)),
+                 (linkerRand + 24) + ',' + (y + (naarBoven ? 5 : -5))].join(' '),
+        fill: 'var(--gebeurtenis)',
+      }));
+      const buitenPlekken = [];
+      [0, 1, 2, 3, 4, 5, 6].forEach(function (stap) {
+        const dy = (naarBoven ? 1 : -1) * stap * 24;
+        [0, 60, 140, 240, 340].forEach(function (dx) { buitenPlekken.push([dx, dy]); });
+      });
+      merkD('nu: ' + (kader === 'loods' ? 't = ' : 't\u2032 = ') + F.nl(o.tNu, 2) +
+            ' \u2014 buiten beeld',
+            linkerRand + 32, y + 5, 'var(--gebeurtenis)',
+            { grootte: 13.5, gewicht: 700, prioriteit: 60, plekken: buitenPlekken });
+    }
 
     // --- De gebeurtenissen ------------------------------------------------
     const punten = [
@@ -831,18 +944,19 @@ export function render(doel) {
             plekken: staafPlekken });
   }
 
-  /** De vier kerncijfers boven de uitleg. */
+  /** De vier kerncijfers boven de uitleg. Ze gelden voor allebei de tonelen,
+   *  dus staan er van elk kader de eigen meting bij. */
   function vulWaarden(o) {
-    const tegelijk = Math.abs(o.sluitVerschil) < 1e-9;
-    const pastHier = o.hierStaaf <= o.hierLoods + 1e-12;
     const kaarten = [
       ['\u03b3', F.nl(o.g, 3), 'var(--tekst)'],
-      ['Staaf in dit kader', F.nl(o.hierStaaf, 2) + ' m', 'var(--trein)'],
-      ['Loods in dit kader', F.nl(o.hierLoods, 2) + ' m', 'var(--perron)'],
-      ['Deuren tegelijk dicht?', tegelijk ? 'ja' : 'nee, ' + F.nl(Math.abs(o.sluitVerschil), 2) + ' m ct ertussen',
-       tegelijk ? 'var(--eigentijd)' : 'var(--gebeurtenis)'],
+      ['De loods meet de staaf', F.nl(o.Lkort, 2) + ' m van ' + F.nl(L, 2),
+       'var(--trein)'],
+      ['De staaf meet de loods', F.nl(o.Dkort, 2) + ' m van ' + F.nl(D, 2),
+       'var(--perron)'],
+      ['Deuren tegelijk dicht?',
+       'loods ja, staaf nee (' + F.nl(o.tStaafIn - o.tStaafUit, 2) + ' m ertussen)',
+       'var(--gebeurtenis)'],
     ];
-    void pastHier;
     waarden.innerHTML = kaarten.map(function (k) {
       return '<div class="waarde-kaart"><div class="k">' + k[0] + '</div>' +
              '<div class="v" style="color:' + k[2] + '">' + k[1] + '</div></div>';
@@ -896,6 +1010,27 @@ export function render(doel) {
        'helemaal binnen" betekent: de achterkant is binnen \u00e9n de voorkant is ' +
        'binnen \u2014 op hetzelfde moment. En juist dat "op hetzelfde moment" is wat ' +
        'de twee kaders verschillend invullen.'],
+      ['Hoe kunnen die twee tonelen hetzelfde moment zijn?',
+       '\u00e9\u00e9n gebeurtenis, twee sneden: t = \u03b3\u00b7\u03c4 en t\u2032 = \u03c4',
+       'bij \u03c4 = ' + F.nl(o.tau, 2) + ' staat de loods op t = ' + F.nl(o.tLoods, 2) +
+       ' en de staaf op t\u2032 = ' + F.nl(o.tStaaf, 2),
+       'De schuif zet \u00e9\u00e9n klok: die op de punt van de staaf. Dat is \u00e9\u00e9n ' +
+       'gebeurtenis in de ruimtetijd, en daar is geen ruzie over. Maar "alles wat ' +
+       'nu gebeurt" is per kader een andere snede door die gebeurtenis: de loods ' +
+       'snijdt horizontaal, de staaf onder een hoek. Daarom hoort bij ' +
+       '\u00e9\u00e9nzelfde moment een loodsplaatje \u00e9n een staafplaatje, en zien die er ' +
+       'anders uit. In het diagram eronder zijn het de rode en de blauwe lijn door ' +
+       'hetzelfde punt.'],
+      ['Waarom is het ene toneel eerder klaar dan het andere?',
+       'de loods is klaar bij \u03c4 = ' + F.nl(o.tauLoodsEind, 1) +
+       ', de staaf pas bij \u03c4 = ' + F.nl(o.tauStaafEind, 1),
+       'verhouding ' + F.nl(o.tauStaafEind / Math.max(o.tauLoodsEind, 1e-9), 1) + 'x',
+       'Op diezelfde klok duurt het ene verhaal langer dan het andere, en ook dat ' +
+       'is geen fout. De loods ziet de staaf er in \u00e9\u00e9n keer doorheen schieten; de ' +
+       'staaf ziet een ingekorte loods langzaam langs zijn hele lengte kruipen. ' +
+       'Staat er "buiten beeld" bij het bovenste toneel, dan is de staaf daar al ' +
+       'lang en breed vertrokken terwijl het onderste toneel nog bezig is. Schuif ' +
+       'de snelheid omlaag en de twee verhalen lopen weer ongeveer gelijk op.'],
       ['Waarom \u00e9\u00e9n lijn door beide stippen, en twee?',
        'de loods snijdt horizontaal, de staaf onder helling \u03b2',
        'loods: t = ' + F.nl(o.tLoodsSluit, 2) + ' \u00a0\u00a0 staaf: t\u2032 = ' +
@@ -995,10 +1130,10 @@ export function render(doel) {
     teken();
   }
 
-  /** Zet de tijdschuif op een bepaald moment in het gekozen kader. */
-  function gaNaar(t) {
+  /** Zet de schuif op een bepaalde stand van de klok op de staafpunt. */
+  function gaNaar(tau) {
     const o = opzet();
-    const f = (t - o.ctMin) / (o.ctMax - o.ctMin);
+    const f = (tau - o.tauMin) / (o.tauMax - o.tauMin);
     fractie = Math.max(0, Math.min(1, f));
     schuifTijd.value = String(fractie);
     werkBij();
@@ -1053,13 +1188,19 @@ export function render(doel) {
     schuifTijd.value = '0';
     werkBij();
   });
-  uitKnop.addEventListener('click', function () { gaNaar(opzet().gDeurUit.t); });
-  inKnop.addEventListener('click', function () { gaNaar(opzet().gDeurIn.t); });
+  // De drie sluitingen, elk op de stand van de klok waar ze horen. In de loods
+  // vallen de twee schuiven samen; voor de staaf staan ze ver uit elkaar.
+  dichtKnop.addEventListener('click', function () {
+    const o = opzet();
+    gaNaar(o.tc / o.g);
+  });
+  uitKnop.addEventListener('click', function () { gaNaar(opzet().tStaafUit); });
+  inKnop.addEventListener('click', function () { gaNaar(opzet().tStaafIn); });
 
   function kiesKader(welk) {
     if (kader === welk) return;
-    // Hetzelfde moment aanhouden lukt niet: de tijdas is een andere. Wel de
-    // relatieve plek op de nieuwe tijdas, zodat het beeld niet wegspringt.
+    // Alleen het diagram wisselt van kader; de twee tonelen en de klok op de
+    // staafpunt blijven staan waar ze stonden.
     kader = welk;
     loodsKaderKnop.classList.toggle('aan', welk === 'loods');
     staafKaderKnop.classList.toggle('aan', welk === 'staaf');

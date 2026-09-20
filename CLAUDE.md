@@ -126,11 +126,22 @@ elk bestand hoeft te openen.
   lichtsignalen zelf (lagen *Aarde seint* en *Schip seint*): wat je zíet springt
   nergens, en telt toch op tot dezelfde eindstand. Daar zit ook de asymmetrie:
   de aarde ziet de omkeer pas op t = T(1+β).
-- **Staaf in de loods** (`loods.js`) — de ladderparadox. Toneel en
-  Minkowski-diagram in een omkeerbaar kader, deuren die even dichtklappen, de
-  twee volgordes naast elkaar met hun verschil γ·β·D, en een lichtsignaal dat
-  laat zien waarom een star lichaam niet kan bestaan. Tijd én lengte in meters,
-  zodat licht onder 45° loopt.
+- **Staaf in de loods** (`loods.js`) — de ladderparadox. Bovenaan staan
+  **beide tonelen op hetzelfde moment**: de schuif zet één klok, die op de punt
+  van de staaf, en elk kader legt daar zijn eigen nu doorheen (loods op
+  t = γ·τ, staaf op t′ = τ). Zo zie je de lengtecontractie twee kanten op
+  tegelijk, met dezelfde meters per pixel in allebei de tonelen. Daaronder het
+  Minkowski-diagram waar die twee sneden vandaan komen, met de laag **Beide
+  kaders**: één lijn van de loods door allebei de sluitingen en twee lijnen van
+  de staaf, γ·β·D uit elkaar. Verder deuren die even dichtklappen, een
+  lichtsignaal dat laat zien waarom een star lichaam niet kan bestaan, en drie
+  sprongknoppen naar de drie sluitingen. Tijd én lengte in meters, zodat licht
+  onder 45° loopt.
+
+  Let op: op die ene klok duurt het staafverhaal langer dan het loodsverhaal —
+  tot een factor zes bij hoge snelheid. Het bovenste toneel meldt dan zelf dat
+  de staaf buiten beeld is; dat is geen fout maar het gevolg van twee sneden
+  met een andere hoek.
 - **Epstein-cirkel** (`epstein.js`) — de cirkel waarin ruimte en tijd samen
   altijd c opleveren.
 
