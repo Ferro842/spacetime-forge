@@ -73,6 +73,7 @@ export function render(doel) {
   let kader = 'loods';     // of 'staaf'
   let groot = false;       // het diagram over het hele vlak
   let toonSignaal = false; // lichtsignaal van de uitgangssluiting
+  let toonBeide = true;    // de gelijktijdigheid van beide kaders tegelijk
   let speelt = false;
   let laatsteTik = 0;
 
@@ -90,7 +91,12 @@ export function render(doel) {
     'dicht. Eerst de uitgang, ruim voordat de staaf er is; veel later de ingang, ' +
     'als de staaf er al voorbij is. Niemand raakt iets. Wissel van kader en volg ' +
     'de twee gebeurtenissen in het diagram: ze wisselen van <b>volgorde</b>, niet ' +
-    'van plaats.</p>';
+    'van plaats.</p>' +
+    '<p style="margin-top:7px">Met <b>Beide kaders</b> staan allebei de sneden in ' +
+    '\u00e9\u00e9n diagram. Door dezelfde twee stippen legt de loods \u00e9\u00e9n lijn \u2014 voor haar ' +
+    'gebeuren ze tegelijk \u2014 en de staaf twee lijnen, met de hele doorvaart ' +
+    'ertussen. Niet de gebeurtenissen verschillen, maar de manier waarop je de ' +
+    'ruimtetijd in \u201cmomenten\u201d snijdt.</p>';
   doel.appendChild(uitleg);
 
   const vak = document.createElement('div');
@@ -143,6 +149,7 @@ export function render(doel) {
     '    <button class="knop klein aan" id="lo-kader-loods">Loodskader</button>' +
     '    <button class="knop klein" id="lo-kader-staaf">Staafkader</button>' +
     '    <button class="knop klein" id="lo-groot">Groot</button>' +
+    '    <button class="knop klein aan" id="lo-beide">Beide kaders</button>' +
     '    <button class="knop klein" id="lo-signaal">Signaal</button>' +
     '  </div>' +
     '</div>';
@@ -191,6 +198,7 @@ export function render(doel) {
   const staafKaderKnop = paneel.querySelector('#lo-kader-staaf');
   const grootKnop = paneel.querySelector('#lo-groot');
   const signaalKnop = paneel.querySelector('#lo-signaal');
+  const beideKnop = paneel.querySelector('#lo-beide');
   const volgordeVak = volgordePaneel.querySelector('#lo-volgorde');
 
   /**
@@ -310,6 +318,11 @@ export function render(doel) {
     return {
       g: g, Lkort: Lkort, Dkort: Dkort, tA: tA, tB: tB, tUit: tUit,
       past: past, tc: tc, duur: duur,
+      // De twee sluitingen, afgelezen op de klok van elk kader. Deze getallen
+      // hangen niet af van welk kader er getekend wordt: dat is juist de clou.
+      tLoodsSluit: tc,
+      tStaafUit: g * (tc - beta * D),
+      tStaafIn: g * tc,
       naar: naar, plek: plek, vLoods: vLoods, vStaaf: vStaaf,
       pIngang: pIngang, pUitgang: pUitgang, pVoor: pVoor, pAchter: pAchter,
       gDeurUit: gDeurUit, gDeurIn: gDeurIn, gVoorUit: gVoorUit,
@@ -594,6 +607,75 @@ export function render(doel) {
               plekken: sigPlekken });
     }
 
+    /**
+     * Zet een label bij een lijn met helling b door (x0, t0), op een stuk waar
+     * die lijn ook echt in het vlak loopt: bij een schuine lijn ligt de zijrand
+     * er vaak naast, want hij verlaat het beeld door de boven- of onderrand.
+     *
+     * De uitwijkplekken vormen een raster rond de lijn: opschuiven langs de
+     * lijn, en per plek ook een paar stappen er loodrecht vanaf. Alleen langs
+     * de lijn is niet genoeg, want de wereldlijnen kruisen hem onder een vlakke
+     * hoek en dan blijft het label kilometers lang in hun blokkade hangen.
+     */
+    function labelOpLijn(tekst, kleur, prioriteit, b, x0, t0, deel) {
+      let xVan = o.xMin, xTot = o.xMax;
+      if (Math.abs(b) > 1e-9) {
+        const xBij = function (t) { return x0 + (t - t0) / b; };
+        const r1 = xBij(o.ctMin), r2 = xBij(o.ctMax);
+        xVan = Math.max(xVan, Math.min(r1, r2));
+        xTot = Math.min(xTot, Math.max(r1, r2));
+      } else if (t0 < o.ctMin || t0 > o.ctMax) {
+        return;
+      }
+      if (xTot <= xVan) return;
+      const xLab = xVan + (xTot - xVan) * deel;
+      const lang = Math.hypot(1, b);
+      const langsX = 1 / lang, langsY = -b / lang;
+      const dwarsX = -langsY, dwarsY = langsX;
+      const plekken = [];
+      // Eerst helemaal langs de lijn schuiven en pas daarna ervan af: een label
+      // dat op zijn eigen lijn blijft liggen hoort er zichtbaar bij, een label
+      // dat honderd pixels ernaast hangt wijst nergens meer naar.
+      [0, 26, -26, 50, -50, 76, -76, 104, -104].forEach(function (zij) {
+        [0, 60, -60, 130, -130, 210, -210, 300, -300, 400, -400, 520, -520]
+          .forEach(function (langs) {
+            plekken.push([langsX * langs + dwarsX * zij,
+                          langsY * langs + dwarsY * zij]);
+          });
+      });
+      merkD(tekst, schaal.naarX(xLab), schaal.naarY(t0 + b * (xLab - x0)) - 11, kleur,
+            { anker: 'middle', grootte: 13.5, gewicht: 650, prioriteit: prioriteit,
+              plekken: plekken });
+    }
+
+    // --- Beide kaders tegelijk ----------------------------------------------
+    // Dezelfde twee stippen, twee keer doorsneden. De loods legt er één lijn
+    // doorheen: voor haar vallen de sluitingen samen. De staaf legt er twee
+    // lijnen doorheen, gamma*beta*D uit elkaar, met de hele doorvaart ertussen.
+    // Welk kader het diagram ook tekent, die verhouding blijft hetzelfde —
+    // alleen de scheefte van het beeld verandert.
+    if (toonBeide) {
+      // Gestippeld, niet gestreept. Bij 0,9c staat een wereldlijn onder 48° en
+      // een snede onder 42°: die twee zijn op helling alleen niet uit elkaar te
+      // houden. Een stippellijn leest als "geen voorwerp maar een moment", en
+      // dat verschil moet het beeld dragen.
+      function snede(b, punt, kleur, tekst, prioriteit, deel) {
+        lijnen.appendChild(T.nuLijn(schaal, {
+          beta: b, x0: punt.x, t0: punt.t,
+          kleur: kleur, dikte: 1.9, streep: '2 6',
+        }));
+        labelOpLijn(tekst, kleur, prioriteit, b, punt.x, punt.t, deel);
+      }
+      // De snede van de loods door beide sluitingen — één lijn
+      snede(o.vLoods, o.gDeurIn, 'var(--perron)',
+            'loods: t = ' + F.nl(o.tLoodsSluit, 2), 82, 0.30);
+      // En de twee sneden van de staaf, één per sluiting
+      snede(o.vStaaf, o.gDeurUit, 'var(--trein)',
+            'staaf: t\u2032 = ' + F.nl(o.tStaafUit, 2), 81, 0.62);
+      snede(o.vStaaf, o.gDeurIn, 'var(--trein)',
+            'staaf: t\u2032 = ' + F.nl(o.tStaafIn, 2), 80, 0.38);
+    }
+
     // Het nu van het andere kader, door de voorkant van de staaf
     const bAnder = kader === 'loods' ? o.vStaaf : o.vLoods;
     const xVoorNu = o.plek(o.pVoor, o.vStaaf, o.tNu);
@@ -601,38 +683,9 @@ export function render(doel) {
       beta: bAnder, x0: xVoorNu, t0: o.tNu,
       kleur: 'var(--blauw)', dikte: 1.6, streep: '8 5',
     }));
-    // Het label hoort bij deze lijn, dus moet het op een punt staan waar de
-    // lijn ook echt loopt. Bij een schuine lijn verlaat die het vlak door de
-    // boven- of onderrand, en dan ligt de zijrand er dus naast.
-    let xVan = o.xMin, xTot = o.xMax;
-    if (Math.abs(bAnder) > 1e-9) {
-      const xBij = function (t) { return xVoorNu + (t - o.tNu) / bAnder; };
-      const r1 = xBij(o.ctMin), r2 = xBij(o.ctMax);
-      xVan = Math.max(xVan, Math.min(r1, r2));
-      xTot = Math.min(xTot, Math.max(r1, r2));
-    }
-    if (xTot > xVan) {
-      const xLab = xVan + (xTot - xVan) * (bAnder >= 0 ? 0.78 : 0.22);
-      // Een raster rond de lijn: eerst opschuiven langs de lijn, en per plek
-      // ook een paar stappen er loodrecht vanaf. Alleen langs de lijn is niet
-      // genoeg, want de wereldlijnen kruisen hem onder een vlakke hoek en dan
-      // blijft het label kilometers lang in hun blokkade hangen.
-      const lang = Math.hypot(1, bAnder);
-      const langsX = 1 / lang, langsY = -bAnder / lang;
-      const dwarsX = -langsY, dwarsY = langsX;
-      const nuPlekken = [];
-      [0, 60, -60, 130, -130, 210, -210, 300, -300].forEach(function (langs) {
-        [0, 26, -26, 50, -50, 76, -76].forEach(function (zij) {
-          nuPlekken.push([langsX * langs + dwarsX * zij,
-                          langsY * langs + dwarsY * zij]);
-        });
-      });
-      merkD(kader === 'loods' ? 'nu volgens de staaf' : 'nu volgens de loods',
-            schaal.naarX(xLab), schaal.naarY(o.tNu + bAnder * (xLab - xVoorNu)) - 11,
-            'var(--blauw)',
-            { anker: 'middle', grootte: 13.5, gewicht: 600, prioriteit: 74,
-              plekken: nuPlekken });
-    }
+    labelOpLijn(kader === 'loods' ? 'nu volgens de staaf' : 'nu volgens de loods',
+                'var(--blauw)', 74, bAnder, xVoorNu, o.tNu,
+                bAnder >= 0 ? 0.78 : 0.22);
 
     // Het nu van dit kader zelf: horizontaal
     lijnen.appendChild(T.el('line', {
@@ -800,9 +853,9 @@ export function render(doel) {
   function vulVolgorde(o) {
     const g = o.g;
     // Altijd beide kaders laten zien, ongeacht welk kader er getekend wordt.
-    const loodsUit = o.tc, loodsIn = o.tc;
-    const staafUit = g * (o.tc - beta * D);
-    const staafIn = g * o.tc;
+    const loodsUit = o.tLoodsSluit, loodsIn = o.tLoodsSluit;
+    const staafUit = o.tStaafUit;
+    const staafIn = o.tStaafIn;
     const rij = function (naam, waarde, klasse) {
       return '<div' + (klasse ? ' class="' + klasse + '"' : '') + '><span>' + naam +
              '</span><b>' + waarde + '</b></div>';
@@ -843,6 +896,16 @@ export function render(doel) {
        'helemaal binnen" betekent: de achterkant is binnen \u00e9n de voorkant is ' +
        'binnen \u2014 op hetzelfde moment. En juist dat "op hetzelfde moment" is wat ' +
        'de twee kaders verschillend invullen.'],
+      ['Waarom \u00e9\u00e9n lijn door beide stippen, en twee?',
+       'de loods snijdt horizontaal, de staaf onder helling \u03b2',
+       'loods: t = ' + F.nl(o.tLoodsSluit, 2) + ' \u00a0\u00a0 staaf: t\u2032 = ' +
+       F.nl(o.tStaafUit, 2) + ' en ' + F.nl(o.tStaafIn, 2),
+       'Een "moment" is geen ding in de ruimtetijd maar een snede erdoorheen, en ' +
+       'elk kader snijdt onder zijn eigen hoek. Zet <b>Beide kaders</b> aan en je ' +
+       'ziet allebei de sneden door dezelfde twee stippen: de loods legt er ' +
+       '\u00e9\u00e9n lijn doorheen, dus voor haar gebeuren ze tegelijk. De staaf legt er ' +
+       'twee lijnen doorheen, en tussen die twee ligt de hele doorvaart. De ' +
+       'stippen bewegen niet mee \u2014 die liggen vast. Alleen de sneden draaien.'],
       ['Wat gebeurt er nu eigenlijk met de deuren?',
        'ze gaan even dicht en meteen weer open',
        'dicht gedurende ' + F.nl(o.duur, 2) + ' m ct in het loodskader',
@@ -1007,6 +1070,11 @@ export function render(doel) {
   grootKnop.addEventListener('click', function () {
     groot = !groot;
     grootKnop.classList.toggle('aan', groot);
+    werkBij();
+  });
+  beideKnop.addEventListener('click', function () {
+    toonBeide = !toonBeide;
+    beideKnop.classList.toggle('aan', toonBeide);
     werkBij();
   });
   signaalKnop.addEventListener('click', function () {
