@@ -78,13 +78,21 @@ export function render(doel) {
     const g = F.gamma(beta);
     // Even veel pixels per eenheid x als per eenheid ct: daardoor lopen de
     // lichtlijnen precies onder 45°, zoals het in een Minkowski-diagram hoort.
+    // Hoeveel eenheden ct daarmee in het vlak passen ligt dus vast; wat vrij
+    // is, is waar de x-as komt te liggen. Alles wat dit diagram laat zien
+    // gebeurt boven die as: de trein-assen, de eigen-tijdstippen en de
+    // gelijktijdigheidslijnen. Het verleden hoeft alleen breed genoeg te zijn
+    // voor de onderste helft van het lichtkruis en het woord dat erbij staat,
+    // dus krijgt het een kwart en de toekomst de rest.
     const xMax = 2.4;
     const tekenB = BREEDTE - MARGE.links - MARGE.rechts;
     const tekenH = HOOGTE - MARGE.boven - MARGE.onder;
-    const tMax = xMax * tekenH / tekenB;
+    const ctSpan = 2 * xMax * tekenH / tekenB;
+    const ctOnder = -0.25 * ctSpan;
+    const ctBoven = ctSpan + ctOnder;
     const schaal = T.maakSchaal({
       breedte: BREEDTE, hoogte: HOOGTE,
-      xBereik: [-xMax, xMax], yBereik: [-tMax, tMax],
+      xBereik: [-xMax, xMax], yBereik: [ctOnder, ctBoven],
       marge: MARGE,
     });
 
@@ -96,18 +104,33 @@ export function render(doel) {
       x1: schaal.naarX(-xMax), y1: xAs, x2: schaal.naarX(xMax), y2: xAs, dikte: 18,
     });
     labels.blokkeerLijn({
-      x1: yAs, y1: schaal.naarY(-tMax), x2: yAs, y2: schaal.naarY(tMax), dikte: 18,
+      x1: yAs, y1: schaal.naarY(ctOnder), x2: yAs, y2: schaal.naarY(ctBoven), dikte: 18,
     });
 
+    // De toekomst reikt nu hoger dan het vlak breed is, dus lopen de kegel en
+    // de lichtlijnen aan de zijkanten het beeld uit. Een knipmasker om het
+    // tekenvlak houdt ze binnen, zonder dat elke lijn zijn eigen rand hoeft
+    // uit te rekenen.
+    const defs = T.el('defs');
+    const knip = T.el('clipPath', { id: 'wk-vlak' });
+    knip.appendChild(T.el('rect', {
+      x: MARGE.links, y: MARGE.boven,
+      width: tekenB, height: tekenH,
+    }));
+    defs.appendChild(knip);
+    svg.appendChild(defs);
+    const vlak = T.el('g', { 'clip-path': 'url(#wk-vlak)' });
+    svg.appendChild(vlak);
+
     // Toekomstkegel zacht inkleuren (ligt helemaal achteraan)
-    const kegel = [[0, 0], [tMax, tMax], [-tMax, tMax]]
+    const kegel = [[0, 0], [ctBoven, ctBoven], [-ctBoven, ctBoven]]
       .map(function (p) { return schaal.naarX(p[0]) + ',' + schaal.naarY(p[1]); })
       .join(' ');
-    svg.appendChild(T.el('polygon', {
+    vlak.appendChild(T.el('polygon', {
       points: kegel, fill: 'var(--blauw)', opacity: 0.05,
     }));
 
-    svg.appendChild(T.lichtkegel(schaal, { kleur: 'var(--licht)', naarVerleden: true }));
+    vlak.appendChild(T.lichtkegel(schaal, { kleur: 'var(--licht)', naarVerleden: true }));
 
     // Perron-assen
     svg.appendChild(T.el('line', {
@@ -115,7 +138,7 @@ export function render(doel) {
       stroke: 'var(--perron)', 'stroke-width': 2,
     }));
     svg.appendChild(T.el('line', {
-      x1: yAs, y1: schaal.naarY(-tMax), x2: yAs, y2: schaal.naarY(tMax),
+      x1: yAs, y1: schaal.naarY(ctOnder), x2: yAs, y2: schaal.naarY(ctBoven),
       stroke: 'var(--perron)', 'stroke-width': 2,
     }));
     labels.voegToe({
@@ -123,7 +146,7 @@ export function render(doel) {
       grootte: 17, kleur: 'var(--perron)', anker: 'end', gewicht: 650, prioriteit: 95,
     });
     labels.voegToe({
-      tekst: 'ct', x: yAs + 15, y: schaal.naarY(tMax) + 17,
+      tekst: 'ct', x: yAs + 15, y: schaal.naarY(ctBoven) + 17,
       grootte: 17, kleur: 'var(--perron)', gewicht: 650, prioriteit: 95,
       // Boven dit label is geen ruimte meer, dus opzij of omlaag uitwijken
       verschuif: [[0, 0], [-52, 0], [0, 20], [-52, 20]],
@@ -138,7 +161,7 @@ export function render(doel) {
     ];
     treinAssen.forEach(function (as) {
       // Oprekken tot de eerste rand van het tekenvlak, niet verder
-      const rek = Math.min(xMax / as.dx, tMax / as.dt);
+      const rek = Math.min(xMax / as.dx, ctBoven / as.dt);
       const ex = as.dx * rek, et = as.dt * rek;
       svg.appendChild(T.el('line', {
         x1: yAs, y1: xAs,
@@ -170,11 +193,17 @@ export function render(doel) {
     // te laten uitwijken: hoger betekent daar ook verder naar rechts.
     const pxPerT = schaal.naarY(0) - schaal.naarY(1);
 
-    // Tijdtikken op de ct-as
-    const stap = F.netteStap(tMax / 3);
-    for (let t = stap; t <= tMax - 0.05; t += stap) {
+    // Tijdtikken op de ct-as. Boven en onder de as loopt hij verschillend ver
+    // door, dus krijgt elke tik zijn eigen randtoets.
+    // Delen door vier, niet door drie: het bereik is met de asymmetrische as
+    // meegegroeid, en bij /3 valt netteStap net over de grens naar stap 2 —
+    // dan blijft er nog maar een enkele tik over.
+    const stap = F.netteStap(ctBoven / 4);
+    const verste = Math.max(ctBoven, -ctOnder);
+    for (let t = stap; t <= verste - 0.05; t += stap) {
       [1, -1].forEach(function (richting) {
         const tt = t * richting;
+        if (tt > ctBoven - 0.05 || tt < ctOnder + 0.05) return;
         svg.appendChild(T.el('line', {
           x1: yAs - 6, y1: schaal.naarY(tt), x2: yAs + 6, y2: schaal.naarY(tt),
           stroke: 'var(--perron)', 'stroke-width': 1.6,
@@ -186,7 +215,10 @@ export function render(doel) {
         });
       });
 
-      // Eigen-tijd stip op de ct'-as
+      // Eigen-tijd stip op de ct'-as. Die hoort alleen te staan waar de as zelf
+      // nog loopt: bij een hoge snelheid verlaat hij het vlak door de zijkant,
+      // en dan ligt de volgende tik er al buiten.
+      if (t > ctBoven - 0.05 || Math.abs(beta * t) > xMax - 0.05) continue;
       const xg = beta * t;
       const tau = t / g;
       svg.appendChild(T.el('circle', {
@@ -270,11 +302,11 @@ export function render(doel) {
     // Gelijktijdigheidslijnen van de trein, alleen in de toekomst-helft:
     // afgekapt waar de lijn de x-as kruist en waar hij de bovenrand raakt.
     if (toonNu) {
-      for (let t = stap; t <= tMax; t += stap) {
+      for (let t = stap; t <= ctBoven; t += stap) {
         const xLinks = Math.max(-xMax, -t / beta);
-        const xRechts = Math.min(xMax, (tMax - t) / beta);
+        const xRechts = Math.min(xMax, (ctBoven - t) / beta);
         if (xRechts <= xLinks) continue;
-        svg.appendChild(T.nuLijn(schaal, {
+        vlak.appendChild(T.nuLijn(schaal, {
           beta: beta, x0: 0, t0: t, xVan: xLinks, xTot: xRechts,
           kleur: 'var(--trein)', dikte: 0.9, streep: '3 6',
         }));
@@ -296,12 +328,15 @@ export function render(doel) {
 
     // Zones benoemen
     labels.voegToe({
-      tekst: 'toekomst', x: yAs, y: schaal.naarY(tMax * 0.7),
+      // Precies tussen twee gelijktijdigheidslijnen in: die liggen op de ct-as
+      // op hele stappen, dus een halve stap ertussen houdt het woord vrij.
+      tekst: 'toekomst', x: yAs,
+      y: schaal.naarY(Math.floor(ctBoven * 0.78 / stap) * stap + stap / 2),
       grootte: 15, kleur: 'var(--blauw)', anker: 'middle', prioriteit: 60,
       verschuif: [[0, 0], [60, 0], [-60, 0]],
     });
     labels.voegToe({
-      tekst: 'verleden', x: yAs, y: schaal.naarY(-tMax * 0.7),
+      tekst: 'verleden', x: yAs, y: schaal.naarY(ctOnder * 0.62),
       grootte: 15, kleur: 'var(--tekst-zacht)', anker: 'middle', prioriteit: 58,
       verschuif: [[0, 0], [60, 0], [-60, 0]],
     });
