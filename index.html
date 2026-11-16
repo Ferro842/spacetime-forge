@@ -34,6 +34,7 @@
 
 <script type="module">
 import { registreer, moduleLijst } from './js/register.js';
+import { maakTabbladen } from './js/tabbladen.js';
 
 // --- Modules aanmelden ---------------------------------------------------
 // Elke module is een los bestand dat een render(doel) exporteert.
@@ -97,10 +98,10 @@ const doel = document.getElementById('module');
 const titelEl = document.getElementById('titel');
 const onderEl = document.getElementById('onderschrift');
 
-// De uitleg staat boven de zijkolom en is standaard dicht, zodat de bediening
-// bovenaan staat. Klap je hem open, dan blijft hij open als je naar een andere
-// module gaat — tot je de app herlaadt.
-let uitlegOpen = false;
+// De zijkolom is verdeeld in tabbladen. Het tabblad dat je kiest blijft staan
+// als je naar een andere module gaat, voor zover die module het ook heeft —
+// tot je de app herlaadt.
+let tabVoorkeur = 'Bediening';
 
 async function ga(id) {
   const item = moduleLijst().find((m) => m.id === id);
@@ -117,11 +118,7 @@ async function ga(id) {
     if (mod.titel) titelEl.textContent = mod.titel;
     if (mod.onderschrift) onderEl.textContent = mod.onderschrift;
     mod.render(doel);
-    const uitleg = doel.querySelector('.uitleg');
-    if (uitleg) {
-      uitleg.open = uitlegOpen;
-      uitleg.addEventListener('toggle', () => { uitlegOpen = uitleg.open; });
-    }
+    maakTabbladen(doel, tabVoorkeur, (naam) => { tabVoorkeur = naam; });
     location.hash = id;
   } catch (fout) {
     doel.innerHTML =

@@ -41,6 +41,7 @@ css/thema.css         het volledige lichte thema, één bron van waarheid
 js/fysica.js          alle relativistische berekeningen, pure functies
 js/teken.js           gedeelde SVG-helpers
 js/register.js        modulelijst
+js/tabbladen.js       verdeelt de zijkolom van elke module over tabbladen
 js/modules/*.js       één bestand per module, exporteert render(doel)
 manifest.json, sw.js  PWA en offline-cache
 ```
@@ -73,9 +74,15 @@ een module. Contrast minimaal 4,5:1 op de lichte achtergrond.
 `css/thema.css` met `--raak` voor `.knop`, schuiven, menuknoppen en de koppen
 van inklapbare blokken; maak in een module geen eigen, kleinere knoppen.
 
-**Indeling:** het diagram krijgt de volle hoogte van het werkblad. De `.uitleg`
-staat boven de zijkolom, is standaard dicht en schuift zelf als hij lang is.
-`index.html` zet hem open of dicht; een module doet dat niet zelf.
+**Indeling:** het diagram krijgt de volle hoogte van het werkblad. Een module
+zet zijn panelen gewoon onder elkaar in de `.zijkolom`; `js/tabbladen.js`
+verdeelt ze daarna over tabbladen: Bediening, Getallen, Vragen of Afleiding,
+en Uitleg (de `.uitleg` en de `.bron`). De soort volgt uit de inhoud van een
+paneel: knoppen en schuiven is Bediening, `.formule` is Vragen (of Afleiding
+als de kop niet met "Vragen" begint), de rest is Getallen. Wil je het anders,
+zet dan `data-tab="..."` op het paneel. Wat samen in beeld past wordt
+samengevoegd, dus een lichte module heeft alleen Bediening en Uitleg. Een
+module regelt zelf geen tabbladen en klapt de uitleg niet zelf open of dicht.
 
 **Touch:** koppel touch-handlers met `addEventListener(..., {passive:false})`.
 De standaardhandlers zijn soms passive, en dan blokkeert `preventDefault()`

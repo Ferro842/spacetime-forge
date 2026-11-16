@@ -151,6 +151,36 @@ html, body {
 /* De kolom regelt de tussenruimte zelf met gap */
 .zijkolom > * { margin: 0; flex-shrink: 0; }
 
+/* ---- Tabbladen in de zijkolom (js/tabbladen.js) ----
+   De balk staat vast bovenaan; alleen het gekozen vlak eronder schuift, en
+   dat alleen als het echt niet past. De kolom loopt dan over de volle hoogte,
+   want de uitleg is zelf een tabblad geworden. */
+#module > .zijkolom.met-tabs { grid-row: 1 / -1; overflow: hidden; }
+.tabbalk {
+  display: flex; gap: 3px; padding: 3px;
+  background: var(--kaart); border: 1px solid var(--rand);
+  border-radius: 999px; box-shadow: var(--schaduw);
+}
+.tabbalk button {
+  flex: 1 1 0; min-width: 0; min-height: var(--raak); padding: 0 4px;
+  font: inherit; font-size: 13.5px; font-weight: 600; color: var(--tekst-zacht);
+  background: none; border: none; border-radius: 999px; cursor: pointer;
+}
+.tabbalk button.aan { background: var(--blauw); color: #fff; }
+.tabbalk button:active { transform: scale(0.96); }
+.zijkolom > .tabvlak {
+  flex: 1 1 0; min-height: 0;
+  display: flex; flex-direction: column; gap: 10px;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+.zijkolom > .tabvlak[hidden] { display: none; }
+.tabvlak > * { margin: 0; flex-shrink: 0; }
+/* Op zijn eigen tabblad is de uitleg gewoon tekst: altijd open, niet in te
+   klappen, en zo lang als hij is. */
+.tabvlak > .uitleg { max-height: none; overflow: visible; padding-bottom: 14px; }
+.tabvlak > .uitleg > summary { pointer-events: none; }
+.tabvlak > .uitleg[open] > summary::after { content: none; }
+
 
 /* ============ Bouwstenen ============ */
 .paneel {
