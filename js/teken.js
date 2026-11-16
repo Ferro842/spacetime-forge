@@ -370,3 +370,81 @@ export function koppelZoomEnPan(svgNode, { opWijziging, minZoom = 0.3, maxZoom =
     },
   };
 }
+
+/**
+ * Koppelt slepen met één vinger (of de muis) aan een SVG. De aanroeper krijgt
+ * elk punt in viewBox-eenheden, dus dezelfde maat als waarin hij tekent.
+ *
+ * opStart(punt) beslist of er op die plek iets te slepen valt. Geeft het
+ * false of niets terug, dan gebeurt er niets. Elke andere waarde komt bij
+ * opSleep en opStop terug als greep, zodat de module kan onthouden wát er is
+ * vastgepakt. opSleep(punt, greep, delta) krijgt ook de verplaatsing sinds de
+ * vorige beweging mee, voor dingen die je verschuift in plaats van aanwijst.
+ *
+ * Bij twee vingers laat hij los: dat gebaar is van zoomen en pannen.
+ */
+export function koppelSleep(svgNode, breedte, hoogte, { opStart, opSleep, opStop }) {
+  let greep = null, bezig = false, vorige = null;
+
+  function puntVan(e) {
+    const p = e.touches ? e.touches[0] : e;
+    return naarViewBox(svgNode, p.clientX, p.clientY, breedte, hoogte);
+  }
+  function laatLos() {
+    if (bezig && opStop) opStop(greep);
+    bezig = false; greep = null; vorige = null;
+    svgNode.style.cursor = 'grab';
+  }
+  function start(e) {
+    if (e.touches && e.touches.length !== 1) { laatLos(); return; }
+    const punt = puntVan(e);
+    if (!punt) return;
+    const gepakt = opStart(punt);
+    if (gepakt === false || gepakt === null || gepakt === undefined) return;
+    if (e.cancelable) e.preventDefault();
+    greep = gepakt; bezig = true; vorige = punt;
+    svgNode.style.cursor = 'grabbing';
+    opSleep(punt, greep, { dx: 0, dy: 0 });
+  }
+  function beweeg(e) {
+    if (!bezig) return;
+    if (e.touches && e.touches.length !== 1) { laatLos(); return; }
+    if (e.cancelable) e.preventDefault();
+    const punt = puntVan(e);
+    if (!punt) return;
+    opSleep(punt, greep, { dx: punt.x - vorige.x, dy: punt.y - vorige.y });
+    vorige = punt;
+  }
+
+  svgNode.style.cursor = 'grab';
+  svgNode.addEventListener('touchstart', start, { passive: false });
+  svgNode.addEventListener('touchmove', beweeg, { passive: false });
+  svgNode.addEventListener('touchend', laatLos, { passive: false });
+  svgNode.addEventListener('touchcancel', laatLos, { passive: false });
+  svgNode.addEventListener('mousedown', start);
+  svgNode.addEventListener('mousemove', beweeg);
+  svgNode.addEventListener('mouseup', laatLos);
+  svgNode.addEventListener('mouseleave', laatLos);
+}
+
+/**
+ * Een greep: het handvat dat laat zien dat je een lijn kunt verslepen.
+ * Staand voor een lijn die je op en neer trekt, liggend voor links-rechts.
+ */
+export function greep(px, py, kleur, liggend = false) {
+  const groep = el('g', { class: 'greep' });
+  const b = liggend ? 34 : 16, h = liggend ? 16 : 34;
+  groep.appendChild(el('rect', {
+    x: px - b / 2, y: py - h / 2, width: b, height: h, rx: 8,
+    fill: kleur, stroke: 'var(--kaart)', 'stroke-width': 2,
+  }));
+  // Drie ribbels, dwars op de sleeprichting
+  [-5, 0, 5].forEach(function (d) {
+    groep.appendChild(el('line', {
+      x1: liggend ? px + d : px - 3.5, y1: liggend ? py - 3.5 : py + d,
+      x2: liggend ? px + d : px + 3.5, y2: liggend ? py + 3.5 : py + d,
+      stroke: 'var(--kaart)', 'stroke-width': 1.6, 'stroke-linecap': 'round',
+    }));
+  });
+  return groep;
+}

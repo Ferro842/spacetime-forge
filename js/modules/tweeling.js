@@ -56,6 +56,7 @@ export function render(doel) {
   let wachtTot = 0;        // even stilstaan op het keerpunt tijdens afspelen
   let toonAarde = true;    // lichtsignalen van de aarde naar het schip
   let toonSchip = false;   // lichtsignalen van het schip naar de aarde
+  let laatste = null;      // schaal en opzet van de laatste tekening, voor het slepen
 
   const uitleg = document.createElement('details');
   uitleg.className = 'uitleg';
@@ -70,7 +71,9 @@ export function render(doel) {
     '<p style="margin-top:7px">Zet <b>Aarde seint</b> aan en het andere verhaal ' +
     'komt erbij: de lichtsignalen zelf. Die springen nergens. Op de heenweg komen ' +
     'ze uitgerekt binnen, op de terugweg samengeperst, en samen leveren ze precies ' +
-    'de volle aardtijd op.</p>';
+    'de volle aardtijd op.</p>' +
+    '<p style="margin-top:7px"><b>Sleep</b> de reiziger met je vinger langs zijn ' +
+    'wereldlijn; bij het keerpunt klikt hij vast.</p>';
   doel.appendChild(uitleg);
 
   const vak = document.createElement('div');
@@ -240,6 +243,7 @@ export function render(doel) {
     });
     const labels = T.maakLabelPlaatser();
     const yAs = schaal.naarX(0), xAs = schaal.naarY(0);
+    laatste = { schaal: schaal, o: o };
     const linkerRand = schaal.naarX(xMin), rechterRand = schaal.naarX(xMax);
     const bovenRand = schaal.naarY(ctMax), onderRand = schaal.naarY(ctMin);
 
@@ -389,7 +393,12 @@ export function render(doel) {
       lijnen.appendChild(nuLijnVan(o.bNu, o.t, o.x, 'var(--gebeurtenis)', 2.2, '9 5'));
     }
 
-    // De twee stippen: waar de reiziger is, en welk aardmoment hij 'nu' noemt
+    // De twee stippen: waar de reiziger is, en welk aardmoment hij 'nu' noemt.
+    // De ruime kring om de reiziger laat zien dat je hem kunt verslepen.
+    svg.appendChild(T.el('circle', {
+      cx: schaal.naarX(o.x), cy: schaal.naarY(o.t), r: 19,
+      fill: 'var(--trein)', opacity: 0.16,
+    }));
     svg.appendChild(T.el('circle', {
       cx: schaal.naarX(o.x), cy: schaal.naarY(o.t), r: 8,
       fill: 'var(--trein)', stroke: 'var(--kaart)', 'stroke-width': 2,
@@ -614,6 +623,28 @@ export function render(doel) {
     tijdSchuif.value = String(f);
     teken();
   }
+  function stopSpelen() {
+    speelt = false;
+    speelKnop.classList.remove('aan');
+    speelKnop.textContent = 'Afspelen';
+  }
+
+  // Slepen in het diagram zelf: de reiziger volgt de hoogte van je vinger.
+  // Vlak bij het keerpunt klikt hij erop vast, anders is dat ene moment met
+  // een vinger niet te raken — en daar gebeurt het juist.
+  T.koppelSleep(svg, BREEDTE, HOOGTE, {
+    opStart: function () {
+      if (!laatste) return false;
+      stopSpelen();
+      return 'reiziger';
+    },
+    opSleep: function (punt) {
+      const t = laatste.schaal.vanY(punt.y);
+      let f = Math.max(0, Math.min(1, t / laatste.o.tTotaal));
+      if (Math.abs(f - 0.5) < 0.012) f = 0.5;
+      zet(f);
+    },
+  });
   betaSchuif.addEventListener('input', function () {
     beta = parseFloat(betaSchuif.value);
     betaWaarde.textContent = F.nl(beta, 2) + 'c';

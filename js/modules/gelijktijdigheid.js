@@ -88,6 +88,9 @@ export function render(doel) {
   let toonAflezen = true;        // de x'-as met de afleeslijnen erbij
   let toonHyper = false;         // ijk-hyperbolen
   let laatsteTik = 0;
+  // Wat de laatste tekening gebruikte, zodat slepen terug kan rekenen van een
+  // punt op het scherm naar een tijd
+  let laatste = null;
 
   /** De grenzen van de onderste band, afhankelijk van het gekozen beeld. */
   function band() { return groot ? ONDER_GROOT : ONDER; }
@@ -101,7 +104,10 @@ export function render(doel) {
     'achterkant eerder geraakt; in de <b>trein</b> komt het tegelijk aan. Onderin ' +
     'dezelfde gebeurtenissen als Minkowski-diagram: een aankomst wordt <b>rood</b> ' +
     'zodra het perron erlangs is en krijgt een <b>gouden ring</b> zodra de trein ' +
-    'erlangs is.</p>';
+    'erlangs is.</p>' +
+    '<p style="margin-top:7px"><b>Slepen kan ook:</b> schuif boven de trein, ' +
+    'daaronder het perron, of trek onderin de nu-lijn mee. Bij een aankomst van ' +
+    'het licht en bij het inhaalmoment klikt de tijd vast.</p>';
   doel.appendChild(uitleg);
 
   const vak = document.createElement('div');
@@ -341,6 +347,7 @@ export function render(doel) {
     });
     const tAccent = F.klokstand(t, 0, beta);   // stand van de middenklok
     const xStap = F.netteStap(o.xGrens / 3);
+    laatste = { o: o, pxPerX: schaal.naarX(1) - schaal.naarX(0), onder: null };
 
     if (!groot) {
       tekenPerronBeeld(labels, schaal, o, tAccent, xStap);
@@ -510,6 +517,7 @@ export function render(doel) {
         links: MARGE.links, rechts: MARGE.rechts,
       },
     });
+    laatste.onder = ms;
     const tAccent = F.klokstand(t, 0, beta);
     // De trein-nulijn passeert beide aankomsten tegelijk: als zijn eigen klok
     // op L/2 staat. Dat is de kern van het hele verhaal.
@@ -853,6 +861,8 @@ export function render(doel) {
     svg.appendChild(T.nuLijn(ms, {
       beta: 0, x0: 0, t0: t, kleur: 'var(--perron)', dikte: 2, streep: '7 5',
     }));
+    // Het handvat: deze lijn trek je met je vinger omhoog en omlaag
+    svg.appendChild(T.greep(ms.naarX(o.xRechts) - 12, ms.naarY(t), 'var(--perron)'));
 
     // Wat de trein "nu" noemt: even schuin als de snelheid, door de middenklok
     svg.appendChild(T.nuLijn(ms, {
@@ -1056,11 +1066,14 @@ export function render(doel) {
         verschuif: [[0, 0], [0, -18], [0, 24], [-24, -34], [0, 40]],
       });
     }
+    laatste.onder = gs;
     if (t <= o.tGrafiek) {
       svg.appendChild(T.el('line', {
         x1: gs.naarX(t), y1: gs.naarY(yBoven), x2: gs.naarX(t), y2: gs.naarY(yOnder),
         stroke: 'var(--blauw)', 'stroke-width': 1.5, 'stroke-dasharray': '5 5',
       }));
+      // Het handvat: deze lijn schuif je met je vinger naar links en rechts
+      svg.appendChild(T.greep(gs.naarX(t), gs.naarY(yOnder) - 10, 'var(--blauw)', true));
       [-L / 2, 0, L / 2].forEach(function (xa) {
         svg.appendChild(T.el('circle', {
           cx: gs.naarX(t), cy: gs.naarY(voorsprong(t, xa)), r: 4.5,
@@ -1238,6 +1251,57 @@ export function render(doel) {
     tijdW.textContent = F.nl(t, 2);
     teken();
   }
+
+  // --- Slepen in de tekening zelf ------------------------------------------
+  // In het perron-beeld schuif je de trein, in het trein-beeld het perron
+  // eronder, en in de onderste band trek je de nu-lijn mee. Vlak bij een
+  // aankomst van het licht of bij het inhaalmoment klikt de tijd vast; de
+  // ruwe stand loopt apart door, anders kom je er met kleine bewegingen niet
+  // meer vanaf.
+  let ruweT = 0;
+  function klikVast(tt, o) {
+    const marge = 0.009 * o.tMax;
+    const doelen = [o.tAchter, o.tVoor, o.inhaal];
+    for (let i = 0; i < doelen.length; i++) {
+      if (Number.isFinite(doelen[i]) && doelen[i] <= o.tMax &&
+          Math.abs(tt - doelen[i]) < marge) return doelen[i];
+    }
+    return tt;
+  }
+  T.koppelSleep(svg, BREEDTE, HOOGTE, {
+    opStart: function (punt) {
+      if (!laatste) return false;
+      let wat = false;
+      if (!groot && punt.y >= PERRON.titel - 18 && punt.y <= PERRON.flits + 8) wat = 'trein';
+      else if (!groot && punt.y >= TREIN.titel - 16 && punt.y <= TREIN.grond + 10) wat = 'perron';
+      else if (punt.y >= band().boven - 8 && punt.y <= band().tik) wat = 'nu';
+      if (!wat) return false;
+      speelt = false;
+      speelKnop.textContent = 'Afspelen';
+      speelKnop.classList.remove('aan');
+      ruweT = t;
+      return wat;
+    },
+    opSleep: function (punt, wat, delta) {
+      const o = laatste.o;
+      if (wat === 'trein') {
+        // Op het perron rijdt de trein met beta: zoveel opzij is zoveel later
+        ruweT += delta.dx / laatste.pxPerX / beta;
+      } else if (wat === 'perron') {
+        // In de trein glijdt het perron naar links, met beta per eenheid
+        // treintijd, en die treintijd is perrontijd gedeeld door gamma
+        ruweT -= delta.dx / laatste.pxPerX * o.g / beta;
+      } else if (onderBand === 'minkowski') {
+        ruweT = laatste.onder.vanY(punt.y);
+      } else {
+        ruweT = laatste.onder.vanX(punt.x);
+      }
+      ruweT = Math.max(0, Math.min(o.tMax, ruweT));
+      t = klikVast(ruweT, o);
+      schuifTijd.value = String(t);
+      werkBij();
+    },
+  });
 
   function stap(nu) {
     if (!speelt) return;

@@ -79,6 +79,9 @@ export function render(doel) {
   let toonBeide = true;    // de gelijktijdigheid van beide kaders tegelijk
   let speelt = false;
   let laatsteTik = 0;
+  // Wat de laatste tekening gebruikte, zodat slepen terug kan rekenen van een
+  // punt op het scherm naar een stand van de klok
+  let laatste = null;
 
   /** De grenzen van de onderste band, afhankelijk van het gekozen beeld. */
   function band() { return groot ? ONDER_GROOT : ONDER; }
@@ -86,7 +89,7 @@ export function render(doel) {
   const uitleg = document.createElement('details');
   uitleg.className = 'uitleg';
   uitleg.innerHTML =
-    '<summary>Twee verhalen die allebei waar zijn</summary>' +
+    '<summary>Twee verhalen, allebei waar</summary>' +
     '<p>Bovenaan staan <b>allebei de kaders op hetzelfde moment</b>. Dat moment is ' +
     '\u00e9\u00e9n gebeurtenis: de klok op de punt van de staaf wijst \u03c4 aan. De loods legt ' +
     'daar haar eigen nu doorheen en komt op t = \u03b3\u00b7\u03c4; de staaf legt er het hare ' +
@@ -98,6 +101,9 @@ export function render(doel) {
     'schuiven dicht met de staaf erin, onder staat er geen \u00e9\u00e9n dicht. Met ' +
     '<b>Staaf: uitgang</b> en <b>Staaf: ingang</b> zie je die twee sluitingen ' +
     'los van elkaar langskomen.</p>' +
+    '<p style="margin-top:7px"><b>Slepen kan ook:</b> pak boven de staaf, daaronder ' +
+    'de loods, of in het diagram de rode nu-lijn. Vlak bij een sluiting klikt de ' +
+    'klok vast.</p>' +
     '<p style="margin-top:7px">Met <b>Beide kaders</b> staan allebei de sneden in ' +
     '\u00e9\u00e9n diagram. Door dezelfde twee stippen legt de loods \u00e9\u00e9n lijn \u2014 voor haar ' +
     'gebeuren ze tegelijk \u2014 en de staaf twee lijnen, met de hele doorvaart ' +
@@ -394,6 +400,7 @@ export function render(doel) {
     });
     const labels = T.maakLabelPlaatser();
     const linkerRand = schaal.naarX(o.xMin), rechterRand = schaal.naarX(o.xMax);
+    laatste = { o: o, schaal: schaal, band: b, pxPerM: null };
 
     // Linksboven staat het vaantje als HTML over de tekening heen
     labels.blokkeer({ links: 0, boven: 0, breedte: 260, hoogte: 30 });
@@ -450,6 +457,7 @@ export function render(doel) {
     const spanB = L + 2 * o.Dkort + 2.4;
     const span = Math.max(spanA, spanB);
     const pxPerM = tekenB / span;
+    laatste.pxPerM = pxPerM;
     // Elk venster om zijn eigen midden heen, allebei even breed
     const middenA = D / 2, middenB = -L / 2;
     const vensterA = { links: middenA - span / 2 };
@@ -553,7 +561,7 @@ export function render(doel) {
           svg.appendChild(T.el('line', { x1: px, y1: y - 5, x2: px, y2: y + 5,
                                          stroke: kleur, 'stroke-width': 1.4 }));
         });
-        merk(labels, tekst, (a + c) / 2, y - 12, kleur,
+        merk(labels, tekst, (a + c) / 2, y - 8, kleur,
              { anker: 'middle', grootte: 14, gewicht: 650, prioriteit: prioriteit,
                binnen: binnen,
                plekken: [[0, 0], [0, -17], [0, 21], [0, -34], [-90, 0], [90, 0],
@@ -791,6 +799,10 @@ export function render(doel) {
         x1: linkerRand, y1: schaal.naarY(o.tNu), x2: rechterRand, y2: schaal.naarY(o.tNu),
         dikte: 12,
       });
+      // Het handvat: deze lijn kun je met je vinger omhoog en omlaag trekken
+      svg.appendChild(T.greep(rechterRand - 14, schaal.naarY(o.tNu), 'var(--gebeurtenis)'));
+      labels.blokkeer({ links: rechterRand - 26, boven: schaal.naarY(o.tNu) - 20,
+                        breedte: 26, hoogte: 40 });
       // De nu-lijn is zelf geblokkeerd, dus moet het label er ruim boven of ruim
       // onder blijven: vlak ernaast botst het altijd met zijn eigen lijn.
       merkD('nu', linkerRand + 7, schaal.naarY(o.tNu) - 16, 'var(--gebeurtenis)',
@@ -950,11 +962,9 @@ export function render(doel) {
   function vulWaarden(o) {
     const kaarten = [
       ['\u03b3', F.nl(o.g, 3), 'var(--tekst)'],
-      ['Loods meet staaf van ' + F.nl(L, 1) + ' m', F.nl(o.Lkort, 2) + ' m',
-       'var(--trein)'],
-      ['Staaf meet loods van ' + F.nl(D, 1) + ' m', F.nl(o.Dkort, 2) + ' m',
-       'var(--perron)'],
-      ['Tussen de sluitingen: loods 0, staaf',
+      ['Staaf volgens de loods', F.nl(o.Lkort, 2) + ' m', 'var(--trein)'],
+      ['Loods volgens de staaf', F.nl(o.Dkort, 2) + ' m', 'var(--perron)'],
+      ['Sluitingen uiteen (staaf)',
        F.nl(o.tStaafIn - o.tStaafUit, 2) + ' m', 'var(--gebeurtenis)'],
     ];
     waarden.innerHTML = kaarten.map(function (k) {
@@ -1138,6 +1148,57 @@ export function render(doel) {
     schuifTijd.value = String(fractie);
     werkBij();
   }
+
+  // --- Slepen in de tekening zelf ------------------------------------------
+  // Drie plekken om vast te pakken. In het bovenste toneel de staaf, in het
+  // onderste de loods: die schuif je opzij, en de klok loopt mee. In het
+  // diagram de rode nu-lijn: die volgt de hoogte van je vinger.
+  //
+  // Vlak bij een van de drie sluitingen klikt de klok erop vast, anders zijn
+  // die momenten met een vinger niet precies te raken. De ruwe stand wordt
+  // apart bijgehouden: zou je de vastgeklikte stand als vertrekpunt nemen,
+  // dan kwam je er met kleine bewegingen nooit meer vanaf.
+  let ruweTau = 0;
+  function klikVast(tau, o) {
+    const marge = 0.008 * (o.tauMax - o.tauMin);
+    const doelen = [o.tc / o.g, o.tStaafUit, o.tStaafIn];
+    for (let i = 0; i < doelen.length; i++) {
+      if (Math.abs(tau - doelen[i]) < marge) return doelen[i];
+    }
+    return tau;
+  }
+  T.koppelSleep(svg, BREEDTE, HOOGTE, {
+    opStart: function (punt) {
+      if (!laatste) return false;
+      let wat = false;
+      const b = laatste.band;
+      if (!groot && punt.y >= TONEEL_A.titel - 18 && punt.y <= TONEEL_A.maat + 12) wat = 'staaf';
+      else if (!groot && punt.y >= TONEEL_B.titel - 16 && punt.y <= TONEEL_B.maat + 12) wat = 'loods';
+      else if (punt.y >= b.boven - 6 && punt.y <= b.onder + 6) wat = 'nu';
+      if (!wat) return false;
+      speelt = false;
+      speelKnop.textContent = 'Afspelen';
+      speelKnop.classList.remove('aan');
+      ruweTau = laatste.o.tau;
+      return wat;
+    },
+    opSleep: function (punt, wat, delta) {
+      const o = laatste.o;
+      if (wat === 'staaf') {
+        // In het loodskader schuift de staaf met beta per eenheid loodstijd,
+        // en de klok op zijn punt loopt een factor gamma trager dan die tijd.
+        ruweTau += delta.dx / laatste.pxPerM / (beta * o.g);
+      } else if (wat === 'loods') {
+        // In het staafkader schuift de loods naar links: -beta per eenheid tau.
+        ruweTau -= delta.dx / laatste.pxPerM / beta;
+      } else {
+        const tNu = laatste.schaal.vanY(punt.y);
+        ruweTau = kader === 'loods' ? tNu / o.g : tNu;
+      }
+      ruweTau = Math.max(o.tauMin, Math.min(o.tauMax, ruweTau));
+      gaNaar(klikVast(ruweTau, o));
+    },
+  });
 
   function stap(nu) {
     if (!speelt) return;

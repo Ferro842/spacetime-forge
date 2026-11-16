@@ -81,6 +81,15 @@ staat boven de zijkolom, is standaard dicht en schuift zelf als hij lang is.
 De standaardhandlers zijn soms passive, en dan blokkeert `preventDefault()`
 de paginascroll niet — met als gevolg dat verticaal slepen hapert.
 
+**Slepen:** gebruik `koppelSleep` uit `js/teken.js`; die regelt vinger en muis
+en geeft punten in viewBox-eenheden. Bewaar bij het tekenen de schaal, zodat
+de sleepfunctie van een punt terug kan rekenen naar tijd of plaats. Zet een
+`greep` op elke lijn die je kunt verslepen. Onderdelen van een tekening
+vangen zelf geen aanrakingen op (`pointer-events: none` in het thema): elke
+module tekent bij elke beweging opnieuw, en een aanraking die begon op een
+element dat daarna verdwijnt komt nergens meer aan. In Chromium stopte het
+slepen daardoor na de eerste beweging.
+
 ## Inhoudelijke afspraken
 
 De uitleg is gebaseerd op drie boeken. **Altijd parafraseren, nooit
