@@ -443,9 +443,24 @@ input[type=range]::-webkit-slider-thumb {
 /* ============ Uitlegmodus (js/uitlegmodus.js) ============
    De app als uitlegbord. Menu, kop en zijkolom verdwijnen; de tekening krijgt
    de volle hoogte en ernaast staat één stap van het verhaal in grote letters. */
-#inhoud > header { display: flex; align-items: flex-start; gap: 16px; }
+#inhoud > header { display: flex; align-items: flex-start; gap: 16px; position: relative; }
 #inhoud > header > .kop-tekst { flex: 1; min-width: 0; }
-#uitleg-knop { flex: none; }
+.kop-knoppen { flex: none; display: flex; gap: 8px; }
+/* Alleen als delen en kopieren allebei niet mogen: de link om over te nemen */
+#deel-veld {
+  position: absolute; right: 0; top: calc(var(--raak) + 8px); z-index: 20;
+  width: 560px; padding: 12px 14px;
+  display: flex; align-items: center; gap: 10px;
+  background: var(--kaart); border: 1px solid var(--rand-sterk);
+  border-radius: var(--radius); box-shadow: var(--schaduw);
+}
+#deel-veld[hidden] { display: none; }
+#deel-veld label { flex: none; font-size: 14px; color: var(--tekst-zacht); }
+#deel-veld input {
+  flex: 1; min-width: 0; height: var(--raak); padding: 0 10px;
+  font: inherit; font-size: 14px; color: var(--tekst);
+  border: 1px solid var(--rand); border-radius: var(--radius-klein); background: var(--bg);
+}
 
 body.uitlegmodus #nav,
 body.uitlegmodus #inhoud > header { display: none; }

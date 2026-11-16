@@ -29,7 +29,16 @@
         <h2 id="titel">Laden…</h2>
         <p id="onderschrift"></p>
       </div>
-      <button class="knop" id="uitleg-knop">Uitlegmodus</button>
+      <div class="kop-knoppen">
+        <button class="knop" id="begin-knop">Beginstand</button>
+        <button class="knop" id="deel-knop">Deel link</button>
+        <button class="knop" id="uitleg-knop">Uitlegmodus</button>
+      </div>
+      <div id="deel-veld" hidden>
+        <label for="deel-adres">Kopieer deze link:</label>
+        <input id="deel-adres" type="text" readonly />
+        <button class="knop" id="deel-dicht">Klaar</button>
+      </div>
     </header>
     <div id="module"></div>
   </main>
@@ -39,6 +48,7 @@
 import { registreer, moduleLijst } from './js/register.js';
 import { maakTabbladen } from './js/tabbladen.js';
 import { startUitlegmodus } from './js/uitlegmodus.js';
+import { leesStand, verschil, zetStand, naarHash, uitHash, haalOp, bewaar } from './js/geheugen.js';
 
 // --- Modules aanmelden ---------------------------------------------------
 // Elke module is een los bestand dat een render(doel) exporteert.
@@ -90,7 +100,7 @@ for (const groep of GROEPEN) {
     const knop = document.createElement('button');
     knop.textContent = item.naam;
     knop.disabled = !item.pad;
-    if (item.pad) knop.addEventListener('click', () => ga(item.id));
+    if (item.pad) knop.addEventListener('click', () => ga(item.id, { nieuw: true }));
     g.appendChild(knop);
     knoppen.set(item.id, knop);
   }
@@ -102,25 +112,84 @@ const doel = document.getElementById('module');
 const titelEl = document.getElementById('titel');
 const onderEl = document.getElementById('onderschrift');
 
-// De zijkolom is verdeeld in tabbladen. Het tabblad dat je kiest blijft staan
-// als je naar een andere module gaat, voor zover die module het ook heeft —
-// tot je de app herlaadt.
-let tabVoorkeur = 'Bediening';
+// De app onthoudt waar je was: de laatste module, het gekozen tabblad en per
+// module de stand van knoppen en schuiven (zie js/geheugen.js). Dezelfde stand
+// staat ook in het adres, zodat een link precies dit beeld opent.
+const geheugen = haalOp();
 
-// De module die nu in beeld staat, voor de uitlegmodus: die heeft het verhaal
-// van de module nodig en haar naam.
+// De zijkolom is verdeeld in tabbladen. Het tabblad dat je kiest blijft staan
+// als je naar een andere module gaat, voor zover die module het ook heeft.
+let tabVoorkeur = geheugen.tab || 'Bediening';
+
+// De module die nu in beeld staat: haar id, haar verhaal voor de uitlegmodus,
+// haar naam, en de stand waarin ze geladen werd (om het verschil mee te meten).
 let huidige = null;
 let sluitUitleg = null;
+let beurt = 0;
 
-async function ga(id) {
+const bestaat = (id) => moduleLijst().some((m) => m.id === id && m.pad);
+
+/** Zet het adres, zonder dat de pagina daarop reageert. */
+function zetAdres(hash, nieuw) {
+  if (location.hash === '#' + hash) return;
+  try {
+    history[nieuw ? 'pushState' : 'replaceState'](null, '', '#' + hash);
+  } catch (fout) {
+    // Een browser mag dit weigeren als het te vaak gebeurt; de stand staat dan
+    // nog wel in het geheugen, en het adres volgt bij de volgende wijziging.
+  }
+}
+
+/** Legt de stand van dit moment vast, in de opslag en in het adres. */
+function onthoud(metAdres = true) {
+  if (!huidige) return;
+  const stand = verschil(huidige.begin, leesStand(doel));
+  if (Object.keys(stand).length) geheugen.standen[huidige.id] = stand;
+  else delete geheugen.standen[huidige.id];
+  geheugen.module = huidige.id;
+  geheugen.tab = tabVoorkeur;
+  bewaar(geheugen);
+  if (metAdres) zetAdres(naarHash(huidige.id, stand), false);
+}
+
+// Niet bij elke beweging van een schuif schrijven, maar kort erna
+let wacht = null;
+function onthoudStraks() {
+  clearTimeout(wacht);
+  wacht = setTimeout(onthoud, 400);
+}
+for (const soort of ['input', 'click', 'touchend', 'mouseup']) {
+  doel.addEventListener(soort, onthoudStraks);
+}
+// En in elk geval als de app naar de achtergrond gaat of gesloten wordt
+window.addEventListener('pagehide', () => onthoud());
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') onthoud();
+});
+
+/**
+ * Laadt een module.
+ *   stand    de stand die erop moet ({} is de beginstand); zonder: wat er de
+ *            vorige keer bewaard is
+ *   nieuw    true = een nieuwe stap in de geschiedenis (keuze in het menu)
+ *   vers     true = de module die weggaat niet meer vastleggen (Beginstand)
+ *   uitAdres true = het adres is al veranderd; dat van de vorige module
+ *            mag dan niet meer overschreven worden
+ */
+async function ga(id, { stand = null, nieuw = false, vers = false, uitAdres = false } = {}) {
   const item = moduleLijst().find((m) => m.id === id);
   if (!item || !item.pad) return;
+  const mijnBeurt = ++beurt;
+
+  clearTimeout(wacht);
+  if (!vers) onthoud(!uitAdres);
 
   for (const [k, knop] of knoppen) knop.classList.toggle('actief', k === id);
 
   // Staat de uitlegmodus nog aan (terugknop van de browser), dan eerst netjes
-  // sluiten: anders blijft het menu verborgen bij een module zonder verhaal.
+  // sluiten: anders blijft het menu verborgen.
   if (sluitUitleg) sluitUitleg();
+  deelVeld.hidden = true;
   doel.innerHTML = '';
   huidige = null;
   titelEl.textContent = item.naam;
@@ -128,12 +197,21 @@ async function ga(id) {
 
   try {
     const mod = await import(item.pad);
+    // Intussen kan er al een andere module gekozen zijn
+    if (mijnBeurt !== beurt) return;
     if (mod.titel) titelEl.textContent = mod.titel;
     if (mod.onderschrift) onderEl.textContent = mod.onderschrift;
     mod.render(doel);
     maakTabbladen(doel, tabVoorkeur, (naam) => { tabVoorkeur = naam; });
-    huidige = { verhaal: mod.verhaal, naam: item.naam };
-    location.hash = id;
+    const begin = leesStand(doel);
+    const terug = stand || geheugen.standen[id];
+    if (terug && Object.keys(terug).length) zetStand(doel, terug);
+    huidige = { id, verhaal: mod.verhaal, naam: item.naam, begin };
+    // Wat er werkelijk staat is leidend: een link kan iets vragen wat niet
+    // (meer) bestaat, en dat hoort dan ook niet in het adres te blijven.
+    const nu = verschil(begin, leesStand(doel));
+    zetAdres(naarHash(id, nu), nieuw);
+    onthoud(false);
   } catch (fout) {
     doel.innerHTML =
       '<div class="paneel fout" style="border-color:#e0b4b0;background:#fdf2f1">' +
@@ -144,6 +222,15 @@ async function ga(id) {
   }
 }
 
+// Het adres verandert van buitenaf: terug of vooruit in de browser, of een
+// link die in dit tabblad geplakt wordt. Onze eigen wijzigingen komen hier
+// niet langs.
+window.addEventListener('hashchange', () => {
+  const wens = uitHash(location.hash);
+  if (!bestaat(wens.id)) return;
+  ga(wens.id, { stand: wens.stand || {}, uitAdres: true });
+});
+
 // --- Uitlegmodus -----------------------------------------------------------
 document.getElementById('uitleg-knop').addEventListener('click', () => {
   if (!huidige || sluitUitleg || !doel.querySelector('.diagram-vak')) return;
@@ -151,9 +238,55 @@ document.getElementById('uitleg-knop').addEventListener('click', () => {
     () => { sluitUitleg = null; });
 });
 
-// Startmodule: uit de URL, anders welkom
-const start = location.hash.replace('#', '') || 'welkom';
-ga(moduleLijst().some((m) => m.id === start && m.pad) ? start : 'welkom');
+// --- Beginstand en delen ---------------------------------------------------
+document.getElementById('begin-knop').addEventListener('click', () => {
+  if (!huidige) return;
+  delete geheugen.standen[huidige.id];
+  bewaar(geheugen);
+  ga(huidige.id, { stand: {}, vers: true });
+});
+
+const deelKnop = document.getElementById('deel-knop');
+const deelVeld = document.getElementById('deel-veld');
+const deelAdres = document.getElementById('deel-adres');
+let deelKlok = null;
+function meldOpKnop(tekst) {
+  deelKnop.textContent = tekst;
+  clearTimeout(deelKlok);
+  deelKlok = setTimeout(() => { deelKnop.textContent = 'Deel link'; }, 1800);
+}
+deelKnop.addEventListener('click', async () => {
+  if (!huidige) return;
+  clearTimeout(wacht);
+  onthoud();
+  const adres = location.href;
+  // Eerst het deelvenster van het apparaat, dan het klembord, en als ook dat
+  // niet mag de link zelf laten zien om over te nemen.
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: 'Spacetime Forge: ' + huidige.naam, url: adres });
+      return;
+    } catch (fout) {
+      if (fout && fout.name === 'AbortError') return;   // zelf weggetikt
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(adres);
+    meldOpKnop('Gekopieerd');
+    return;
+  } catch (fout) { /* dan met de hand */ }
+  deelAdres.value = adres;
+  deelVeld.hidden = false;
+  deelAdres.focus();
+  deelAdres.select();
+});
+document.getElementById('deel-dicht').addEventListener('click', () => { deelVeld.hidden = true; });
+
+// Start: een module in het adres gaat voor, en dan telt precies wat daar
+// staat. Zonder adres: de module van de vorige keer, in haar laatste stand.
+const begin = uitHash(location.hash);
+if (bestaat(begin.id)) ga(begin.id, { stand: begin.stand || {} });
+else ga(bestaat(geheugen.module) ? geheugen.module : 'welkom');
 
 // --- Service worker (offline) -------------------------------------------
 if ('serviceWorker' in navigator) {

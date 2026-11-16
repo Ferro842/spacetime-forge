@@ -180,7 +180,7 @@ export function render(doel) {
     '</div>' +
     '<div class="regelaar">' +
     '  <label for="tw-tijd">Onderweg: <b id="tw-tijd-waarde"></b></label>' +
-    '  <input type="range" id="tw-tijd" min="0" max="1" step="0.002" value="0" />' +
+    '  <input type="range" id="tw-tijd" data-stand="nee" min="0" max="1" step="0.002" value="0" />' +
     '</div>' +
     '<div class="knoppen">' +
     '  <button class="knop" id="tw-speel">Afspelen</button>' +
@@ -295,6 +295,10 @@ export function render(doel) {
   }
 
   function teken() {
+    // De tijd staat preciezer in de module dan de schuif kan aanwijzen (een
+    // sprongknop of het vastklikken legt hem tussen twee stapjes). Het geheugen
+    // leest hem daarom hier af, niet van de schuif (zie js/geheugen.js).
+    vak.dataset.stand = JSON.stringify({ tijd: fractie });
     while (svg.firstChild) svg.removeChild(svg.firstChild);
     const o = opzet();
     const tekenB = BREEDTE - MARGE.links - MARGE.rechts;
@@ -704,6 +708,13 @@ export function render(doel) {
   // Slepen in het diagram zelf: de reiziger volgt de hoogte van je vinger.
   // Vlak bij het keerpunt klikt hij erop vast, anders is dat ene moment met
   // een vinger niet te raken — en daar gebeurt het juist.
+  // De precieze tijd terugzetten, uit het geheugen of uit een link
+  vak.addEventListener('verhaal-stand', function (e) {
+    const s = e.detail || {};
+    if (!Number.isFinite(s.tijd)) return;
+    zet(Math.max(0, Math.min(1, s.tijd)));
+  });
+
   T.koppelSleep(svg, BREEDTE, HOOGTE, {
     opStart: function () {
       if (!laatste) return false;

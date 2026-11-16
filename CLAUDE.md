@@ -43,6 +43,7 @@ js/teken.js           gedeelde SVG-helpers
 js/register.js        modulelijst
 js/tabbladen.js       verdeelt de zijkolom van elke module over tabbladen
 js/uitlegmodus.js     de app als uitlegbord: verhaal in stappen, met tekenlaag
+js/geheugen.js        onthoudt de stand per module en zet hem in het adres
 js/modules/*.js       één bestand per module, exporteert render(doel)
 manifest.json, sw.js  PWA en offline-cache
 ```
@@ -98,6 +99,21 @@ getallen in een tekst horen bij de stand van die stap: verander je de stand of
 de natuurkunde, reken de tekst dan na. Houd een tekst onder de 300 tekens, dan
 past hij zonder schuiven. Een knop waar een verhaal naar wijst mag je niet
 zomaar hernoemen of weghalen.
+
+**Geheugen en link:** de app onthoudt de laatste module, het gekozen tabblad
+en per module wat je aan knoppen en schuiven hebt veranderd (lokale opslag),
+en zet datzelfde verschil in het adres: `#loods?lo-beta=0.8&lo-beide=uit`.
+`js/geheugen.js` leest dat af van de bediening zelf, dus een module hoeft er
+niets voor te doen behalve dit: **elke knop en schuif die tot de stand hoort
+heeft een id**, ook als hij in een lus gemaakt wordt (`mk-beta-2`,
+`lk-deel-staaf`). Wat geen knop heeft, of preciezer is dan zijn schuif, zet de
+module als JSON in `data-stand` op haar `.diagram-vak` en neemt ze terug via
+het event `verhaal-stand`; de schuif zelf krijgt dan `data-stand="nee"` (zie
+de tijd in tweeling, loods en gelijktijdigheid). Een adres met een module erin
+is de hele waarheid: `#loods` zonder meer is de beginstand. Het geheugen dient
+voor het menu en voor een start zonder adres. Hernoem je een id, dan vervalt
+dat stukje uit oude links en uit het geheugen, zonder foutmelding. En alles
+wat uit een link komt is vreemde invoer: nooit ongezien in `innerHTML`.
 
 **Touch:** koppel touch-handlers met `addEventListener(..., {passive:false})`.
 De standaardhandlers zijn soms passive, en dan blokkeert `preventDefault()`

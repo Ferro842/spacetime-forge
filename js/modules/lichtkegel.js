@@ -256,6 +256,11 @@ export function render(doel) {
   }
 
   function teken() {
+    // Waar de gebeurtenis ligt hoort bij de stand, maar heeft geen knop:
+    // het geheugen leest hem hier af.
+    vak.dataset.stand = JSON.stringify({
+      evT: Math.round(evT * 1e4) / 1e4, evX: Math.round(evX * 1e4) / 1e4,
+    });
     while (svg.firstChild) svg.removeChild(svg.firstChild);
     const schaal = maakSchaal();
     const labels = T.maakLabelPlaatser();
@@ -817,12 +822,14 @@ export function render(doel) {
     teken();
   });
 
-  // De gebeurtenis heeft geen schuif, alleen een vinger. De uitlegmodus zet
-  // hem daarom met een bericht op zijn plek (zie js/uitlegmodus.js).
+  // De gebeurtenis heeft geen schuif, alleen een vinger. De uitlegmodus en het
+  // geheugen zetten hem daarom met een bericht op zijn plek (zie
+  // js/uitlegmodus.js en js/geheugen.js). De waarde kan uit een link komen,
+  // dus dezelfde grenzen als bij het slepen.
   vak.addEventListener('verhaal-stand', function (e) {
     const s = e.detail || {};
-    if (typeof s.evT === 'number') evT = s.evT;
-    if (typeof s.evX === 'number') evX = s.evX;
+    if (Number.isFinite(s.evT)) evT = Math.max(-T_GRENS * 0.95, Math.min(T_GRENS * 0.95, s.evT));
+    if (Number.isFinite(s.evX)) evX = Math.max(-BEREIK * 0.95, Math.min(BEREIK * 0.95, s.evX));
     teken();
   });
 

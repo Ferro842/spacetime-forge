@@ -204,7 +204,7 @@ export function render(doel) {
     '  </div>' +
     '  <div class="regelaar">' +
     '    <label for="gt-tijd">Tijd op de perronklok: <b id="gt-tijd-w"></b></label>' +
-    '    <input type="range" id="gt-tijd" min="0" max="1" step="0.001" value="0" />' +
+    '    <input type="range" id="gt-tijd" data-stand="nee" min="0" max="1" step="0.001" value="0" />' +
     '  </div>' +
     '  <div class="knoppen">' +
     '    <button class="knop" id="gt-speel">Afspelen</button>' +
@@ -395,6 +395,10 @@ export function render(doel) {
   }
 
   function teken() {
+    // De tijd staat preciezer in de module dan de schuif kan aanwijzen (een
+    // sprongknop of het vastklikken legt hem tussen twee stapjes). Het geheugen
+    // leest hem daarom hier af, niet van de schuif (zie js/geheugen.js).
+    vak.dataset.stand = JSON.stringify({ tijd: t });
     while (svg.firstChild) svg.removeChild(svg.firstChild);
     const o = opzet();
     const labels = T.maakLabelPlaatser();
@@ -1330,6 +1334,15 @@ export function render(doel) {
     }
     return tt;
   }
+  // De precieze tijd terugzetten, uit het geheugen of uit een link
+  vak.addEventListener('verhaal-stand', function (e) {
+    const s = e.detail || {};
+    if (!Number.isFinite(s.tijd)) return;
+    t = Math.max(0, Math.min(opzet().tMax, s.tijd));
+    schuifTijd.value = String(t);
+    werkBij();
+  });
+
   T.koppelSleep(svg, BREEDTE, HOOGTE, {
     opStart: function (punt) {
       if (!laatste) return false;

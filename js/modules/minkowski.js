@@ -14,15 +14,15 @@ export const onderschrift =
 // bij die stand; verander je de stand, reken ze dan opnieuw na.
 export const verhaal = {
   basis: {
-    tik: ['#mk-aantal button:nth-child(2)', '#mk-kader button:nth-child(1)'],
+    tik: ['#mk-aantal-3', '#mk-kader-perron'],
     aan: { '#mk-gelijk': true, '#mk-hyper': false },
     stel: {
-      '#mk-regels .object-regel:nth-child(1) .naam-invoer': 'Anna',
-      '#mk-regels .object-regel:nth-child(2) .naam-invoer': 'Bram',
-      '#mk-regels .object-regel:nth-child(3) .naam-invoer': 'Carla',
-      '#mk-regels .object-regel:nth-child(1) input[type=range]': 0,
-      '#mk-regels .object-regel:nth-child(2) input[type=range]': 0.6,
-      '#mk-regels .object-regel:nth-child(3) input[type=range]': -0.35,
+      '#mk-naam-0': 'Anna',
+      '#mk-naam-1': 'Bram',
+      '#mk-naam-2': 'Carla',
+      '#mk-beta-0': 0,
+      '#mk-beta-1': 0.6,
+      '#mk-beta-2': -0.35,
       '#mk-nu': 3,
     },
   },
@@ -57,7 +57,7 @@ export const verhaal = {
         'Carla met 0,79c \u2014 niet met 0,95c: snelheden tellen niet gewoon op. En op ' +
         'Brams "nu" is h\u00edj degene met de meeste tijd op zijn klok.',
       aan: { '#mk-hyper': true },
-      tik: ['#mk-kader button:nth-child(3)'],
+      tik: ['#mk-kader-1'],
     },
     {
       kop: 'Niemand is bijzonder',
@@ -66,7 +66,7 @@ export const verhaal = {
         'haar "nu" zijn weer anders, maar de krommen van gelijke eigen tijd liggen ' +
         'precies waar ze lagen. Die heeft iedereen gemeen.',
       aan: { '#mk-hyper': true },
-      tik: ['#mk-kader button:nth-child(4)'],
+      tik: ['#mk-kader-2'],
     },
   ],
 };
@@ -517,17 +517,25 @@ export function render(doel) {
   }
 
   // --- Zijkolom ----------------------------------------------------------
+  // Een naam is vrije tekst, en kan sinds de deelbare link ook uit een adres
+  // komen. In de tabel gaat hij via innerHTML, dus eerst onschadelijk maken.
+  function veilig(tekst) {
+    return String(tekst).replace(/[&<>"']/g, function (c) {
+      return '&#' + c.charCodeAt(0) + ';';
+    });
+  }
+
   function vulTabel(lijst) {
     const rijen = lijst.map(function (o) {
       return '<tr>' +
-        '<td><span class="stip" style="background:' + o.kleur + '"></span>' + o.naam + '</td>' +
+        '<td><span class="stip" style="background:' + o.kleur + '"></span>' + veilig(o.naam) + '</td>' +
         '<td>' + F.nl(o.bk, 3) + '</td>' +
         '<td>' + F.nl(o.g, 3) + '</td>' +
         '<td>' + F.nl(o.tau, 2) + '</td>' +
         '</tr>';
     }).join('');
     tabelVak.innerHTML =
-      '<table class="tabel"><caption>Gemeten in het kader van ' + kaderNaam() +
+      '<table class="tabel"><caption>Gemeten in het kader van ' + veilig(kaderNaam()) +
       '</caption><thead><tr><th>Object</th><th>\u03b2</th><th>\u03b3</th>' +
       '<th>\u03c4 bij nu</th></tr></thead><tbody>' + rijen + '</tbody></table>';
   }
@@ -537,6 +545,7 @@ export function render(doel) {
     [2, 3, 4].forEach(function (n) {
       const knop = document.createElement('button');
       knop.className = 'knop klein' + (n === aantal ? ' aan' : '');
+      knop.id = 'mk-aantal-' + n;
       knop.textContent = String(n);
       knop.addEventListener('click', function () {
         aantal = n;
@@ -559,6 +568,7 @@ export function render(doel) {
       const naam = document.createElement('input');
       naam.type = 'text';
       naam.className = 'naam-invoer';
+      naam.id = 'mk-naam-' + i;
       naam.value = o.naam;
       naam.maxLength = 9;
       naam.setAttribute('aria-label', 'Naam van object ' + (i + 1));
@@ -571,6 +581,7 @@ export function render(doel) {
 
       const schuif = document.createElement('input');
       schuif.type = 'range';
+      schuif.id = 'mk-beta-' + i;
       schuif.min = '-0.95';
       schuif.max = '0.95';
       schuif.step = '0.01';
@@ -601,6 +612,7 @@ export function render(doel) {
     keuzes.forEach(function (k) {
       const knop = document.createElement('button');
       knop.className = 'knop klein' + (k.i === kader ? ' aan' : '');
+      knop.id = 'mk-kader-' + (k.i < 0 ? 'perron' : k.i);
       knop.textContent = k.naam;
       knop.addEventListener('click', function () {
         kader = k.i;

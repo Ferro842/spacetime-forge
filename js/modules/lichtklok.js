@@ -14,7 +14,7 @@ export const onderschrift =
 // bij die stand; verander je de stand, reken ze dan opnieuw na.
 export const verhaal = {
   basis: {
-    tik: ['#lk-delen button:nth-child(1)'],
+    tik: ['#lk-deel-pythagoras'],
     stel: { '#lk-beta': 0.6, '#lk-tijd': 0 },
   },
   stappen: [
@@ -51,7 +51,7 @@ export const verhaal = {
         '2,50, precies 1,25 keer de rondgang in rust, zoals het hoort. Maar dat ' +
         'komt alleen uit als de klok korter is: 0,80 van zijn eigen lengte.',
       stel: { '#lk-tijd': 0.3 },
-      tik: ['#lk-delen button:nth-child(2)'],
+      tik: ['#lk-deel-staaf'],
     },
     {
       kop: 'Twee linialen',
@@ -60,7 +60,7 @@ export const verhaal = {
         'tot 1, op die van het perron maar tot 0,80. Het perron leest beide ' +
         'uiteinden tegelijk af \u2014 tegelijk volgens het perron, en daar zit het ' +
         'verschil. Onderaan: andersom gaat het net zo.',
-      tik: ['#lk-delen button:nth-child(3)'],
+      tik: ['#lk-deel-linialen'],
     },
     {
       kop: 'Terug naar het diagram',
@@ -68,7 +68,7 @@ export const verhaal = {
         'Beide uitkomsten liggen op de ijk-krommen van het Minkowski-diagram: 1,25 ' +
         'op de tijd-as, 0,80 op de plaats-as. E\u00e9n tekening, twee manieren van ' +
         'aflezen.',
-      tik: ['#lk-delen button:nth-child(4)'],
+      tik: ['#lk-deel-hyperbolen'],
     },
   ],
 };
@@ -812,6 +812,7 @@ export function render(doel) {
   DELEN.forEach(function (d) {
     const knop = document.createElement('button');
     knop.className = 'knop klein' + (d.id === deel ? ' aan' : '');
+    knop.id = 'lk-deel-' + d.id;
     knop.textContent = d.knop;
     knop.addEventListener('click', function () {
       deel = d.id;
