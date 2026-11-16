@@ -22,6 +22,7 @@
       <p>Speciale relativiteit, visueel</p>
     </div>
     <div id="nav-lijst"></div>
+    <div id="versie"></div>
   </nav>
   <main id="inhoud">
     <header>
@@ -48,6 +49,7 @@
 import { registreer, moduleLijst } from './js/register.js';
 import { maakTabbladen } from './js/tabbladen.js';
 import { startUitlegmodus } from './js/uitlegmodus.js';
+import { VERSIE, DATUM } from './js/versie.js';
 import { leesStand, verschil, zetStand, naarHash, uitHash, haalOp, bewaar } from './js/geheugen.js';
 
 // --- Modules aanmelden ---------------------------------------------------
@@ -287,6 +289,42 @@ document.getElementById('deel-dicht').addEventListener('click', () => { deelVeld
 const begin = uitHash(location.hash);
 if (bestaat(begin.id)) ga(begin.id, { stand: begin.stand || {} });
 else ga(bestaat(geheugen.module) ? geheugen.module : 'welkom');
+
+// --- Versie ----------------------------------------------------------------
+// Linksonder staat welke versie er draait. Daarnaast kijkt de app of er op het
+// net al een nieuwere staat: sw.js draagt hetzelfde nummer in de naam van zijn
+// cache en wordt hier vers opgehaald. Zonder net gebeurt er niets.
+const versieEl = document.getElementById('versie');
+versieEl.textContent = 'versie ' + VERSIE + ' · ' + DATUM;
+
+let laatstGekeken = 0;
+async function kijkNaarNieuwereVersie() {
+  if (Date.now() - laatstGekeken < 60000) return;
+  laatstGekeken = Date.now();
+  try {
+    const antwoord = await fetch('sw.js', { cache: 'no-store' });
+    if (!antwoord.ok) return;
+    const gevonden = /spacetime-forge-v(\d+)/.exec(await antwoord.text());
+    if (!gevonden || Number(gevonden[1]) <= VERSIE) return;
+    if (versieEl.querySelector('button')) return;
+    const knop = document.createElement('button');
+    knop.textContent = 'Versie ' + Number(gevonden[1]) + ' staat klaar — tik om te herladen';
+    knop.addEventListener('click', () => {
+      onthoud();
+      location.reload();
+    });
+    versieEl.textContent = 'nu: versie ' + VERSIE;
+    versieEl.appendChild(knop);
+  } catch (fout) {
+    // Geen verbinding: dan valt er niets te melden
+  }
+}
+kijkNaarNieuwereVersie();
+// Ook als de app na een tijd weer naar voren komt: juist dan kan er intussen
+// iets nieuws staan terwijl de oude code nog in het geheugen zit.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') kijkNaarNieuwereVersie();
+});
 
 // --- Service worker (offline) -------------------------------------------
 if ('serviceWorker' in navigator) {

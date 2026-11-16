@@ -44,13 +44,20 @@ js/register.js        modulelijst
 js/tabbladen.js       verdeelt de zijkolom van elke module over tabbladen
 js/uitlegmodus.js     de app als uitlegbord: verhaal in stappen, met tekenlaag
 js/geheugen.js        onthoudt de stand per module en zet hem in het adres
+js/versie.js          het versienummer dat linksonder in het menu staat
 js/modules/*.js       één bestand per module, exporteert render(doel)
 manifest.json, sw.js  PWA en offline-cache
 ```
 
 Een module exporteert `titel`, `onderschrift`, `verhaal` en `render(doel)`. Nieuwe
 modules aanmelden in `index.html` (de GROEPEN-lijst) én toevoegen aan de
-cachelijst in `sw.js`, en daar het versienummer ophogen.
+cachelijst in `sw.js`.
+
+**Versienummer: bij elke uitgave op twee plekken ophogen**, in `js/versie.js`
+(met de datum) en in de naam van de cache bovenaan `sw.js`. Ze horen gelijk te
+zijn. Het nummer staat linksonder in het menu. De app haalt `sw.js` vers van
+het net en toont een herlaadknop als daar een hoger nummer in staat dan in de
+code die draait; zo zie je op de iPad of een nieuwe uitgave al is aangekomen.
 
 ## Afspraken over de code
 

@@ -1,7 +1,9 @@
 // sw.js — eenvoudige offline-cache.
 // Strategie: netwerk eerst, cache als terugval. Zo zie je altijd de
 // nieuwste versie zodra je online bent, maar werkt de app ook zonder net.
-const CACHE = 'spacetime-forge-v16';
+// Het nummer hieronder hoort gelijk te zijn aan VERSIE in js/versie.js; de app
+// leest het hier af om te zien of er een nieuwere uitgave op het net staat.
+const CACHE = 'spacetime-forge-v17';
 const BESTANDEN = [
   './',
   './index.html',
@@ -12,6 +14,7 @@ const BESTANDEN = [
   './js/tabbladen.js',
   './js/uitlegmodus.js',
   './js/geheugen.js',
+  './js/versie.js',
   './js/modules/welkom.js',
   './js/modules/lichtkegel.js',
   './js/modules/gelijktijdigheid.js',

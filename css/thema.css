@@ -74,6 +74,17 @@ html, body {
 #nav .merk p {
   margin: 3px 0 0; font-size: 12px; color: var(--tekst-zacht);
 }
+/* Onderaan het menu: welke versie er draait, en zo nodig de knop om de
+   nieuwere te laden. */
+#versie {
+  margin-top: auto; padding: 12px 18px 14px;
+  font-size: 12px; color: var(--tekst-zacht);
+}
+#nav #versie button {
+  margin: 8px 0 0 -8px; width: calc(100% + 16px);
+  padding: 9px 10px; font-size: 13px; font-weight: 600; line-height: 1.35;
+  background: var(--blauw-zacht); color: var(--blauw);
+}
 #nav .groep { padding: 14px 10px 4px; }
 #nav .groep-titel {
   font-size: 11px; font-weight: 650; text-transform: uppercase;
