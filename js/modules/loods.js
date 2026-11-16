@@ -19,6 +19,79 @@ export const onderschrift =
   'Een staaf die te lang is voor de loods past er toch in \u2014 en toch niet. ' +
   'Wissel van kader en kijk waar het verschil zit: niet in de lengte, in de klok.';
 
+// Het verhaal voor de uitlegmodus (js/uitlegmodus.js): de stappen in volgorde,
+// met per stap de stand van knoppen en schuiven. De getallen in de tekst horen
+// bij die stand; verander je de stand, reken ze dan opnieuw na.
+export const verhaal = {
+  basis: {
+    tik: ['#lo-kader-loods'],
+    aan: { '#lo-groot': false, '#lo-beide': false, '#lo-signaal': false },
+    stel: { '#lo-beta': 0.9, '#lo-staaf': 10, '#lo-loods': 6, '#lo-tijd': 0 },
+  },
+  stappen: [
+    {
+      kop: 'De vraag',
+      tekst:
+        'Een staaf van 10 meter vliegt met 0,9c door een loods van 6 meter. Past ' +
+        'hij erin? De loods zegt: de staaf krimpt tot 4,36 m, dus ja. De staaf ' +
+        'zegt: de loods krimpt tot 2,62 m, dus nooit. Wie heeft gelijk?',
+    },
+    {
+      kop: 'De loods: hij past',
+      tekst:
+        'Bovenste beeld: de loods staat stil en de staaf meet 4,36 m. Op \u00e9\u00e9n moment ' +
+        'van de loods klappen beide deuren even dicht, met de hele staaf erbinnen.',
+      tik: ['#lo-dicht'],
+    },
+    {
+      kop: 'De staaf: eerst de uitgang',
+      tekst:
+        'Onderste beeld: de staaf staat stil en een loods van 2,62 m komt ' +
+        'aanvliegen. Voor de staaf klapt de deur bij de uitgang het eerst, terwijl ' +
+        'zijn achterkant nog ver buiten de ingang steekt.',
+      tik: ['#lo-uit'],
+    },
+    {
+      kop: 'En veel later de ingang',
+      tekst:
+        'Pas op t\u2032\u00a0=\u00a013,20 klapt de deur bij de ingang, als de loods al bijna over ' +
+        'de hele staaf heen is. Dezelfde twee deuren, dezelfde twee klappen, maar ' +
+        'voor de staaf zit er 12,39 meter lichttijd tussen. Voor de loods is hij ' +
+        'dan allang weg: boven is hij uit beeld.',
+      tik: ['#lo-in'],
+    },
+    {
+      kop: 'Twee sneden door \u00e9\u00e9n ruimtetijd',
+      tekst:
+        'In het diagram is elke deurklap \u00e9\u00e9n punt. De loods trekt \u00e9\u00e9n vlakke lijn ' +
+        'door allebei: tegelijk. De staaf trekt zijn "nu" schuin, en heeft dus twee ' +
+        'lijnen nodig, \u00e9\u00e9n per klap. Niemand ziet iets anders gebeuren, alleen de ' +
+        'volgorde verschilt.',
+      aan: { '#lo-beide': true },
+      tik: ['#lo-dicht'],
+    },
+    {
+      kop: 'Hetzelfde, vanuit de staaf',
+      tekst:
+        'Teken hetzelfde diagram in het kader van de staaf. Nu staat de staaf ' +
+        'rechtop en helt de loods. De twee klappen liggen niet meer op gelijke ' +
+        'hoogte: de uitgang is duidelijk eerder dan de ingang.',
+      aan: { '#lo-beide': true },
+      tik: ['#lo-kader-staaf', '#lo-uit'],
+    },
+    {
+      kop: 'En als de deur dicht blijft?',
+      tekst:
+        'Dan botst de punt, maar de achterkant weet dat nog niet: het bericht kan ' +
+        'niet sneller dan het licht door de staaf. Tot het aankomt vliegt de ' +
+        'achterkant gewoon door, en wordt de staaf in elkaar gedrukt. Een volkomen ' +
+        'star lichaam bestaat niet.',
+      aan: { '#lo-signaal': true },
+      tik: ['#lo-dicht'],
+    },
+  ],
+};
+
 const BREEDTE = 960;
 const HOOGTE = 940;
 // Het toneel en het Minkowski-diagram gebruiken dezelfde marges en hetzelfde

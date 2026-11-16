@@ -9,6 +9,70 @@ export const titel = 'Lichtklok-afleiding';
 export const onderschrift =
   'E\u00e9n driehoek geeft \u03b3, dezelfde klok liggend geeft de lengtecontractie.';
 
+// Het verhaal voor de uitlegmodus (js/uitlegmodus.js): de stappen in volgorde,
+// met per stap de stand van knoppen en schuiven. De getallen in de tekst horen
+// bij die stand; verander je de stand, reken ze dan opnieuw na.
+export const verhaal = {
+  basis: {
+    tik: ['#lk-delen button:nth-child(1)'],
+    stel: { '#lk-beta': 0.6, '#lk-tijd': 0 },
+  },
+  stappen: [
+    {
+      kop: 'Een klok van licht',
+      tekst:
+        'Twee spiegels met een lichtpuls ertussen. Elke keer dat het licht een ' +
+        'spiegel raakt, tikt de klok. Boven staat hij stil. Onder rijdt precies ' +
+        'dezelfde klok voorbij met 0,6c.',
+    },
+    {
+      kop: 'Het licht moet schuin',
+      tekst:
+        'Terwijl het licht omhoog gaat, rijdt de spiegel door. Vanaf het perron ' +
+        'gezien legt het licht in de rijdende klok daarom een schuine, langere weg ' +
+        'af \u2014 met dezelfde lichtsnelheid. Dat kost meer tijd: de rijdende klok tikt ' +
+        'later.',
+      stel: { '#lk-tijd': 0.3 },
+    },
+    {
+      kop: 'De driehoek',
+      tekst:
+        'Drie zijden: de spiegelafstand L, het stuk dat de klok intussen opschuift, ' +
+        'en de schuine lichtweg. Pythagoras maakt daar \u00e9\u00e9n getal van: de tik duurt ' +
+        '\u03b3 keer zo lang. Bij 0,6c is dat 1,25 \u2014 vijf tikken hier tegen vier in de ' +
+        'trein.',
+      stel: { '#lk-tijd': 0.5 },
+    },
+    {
+      kop: 'Dezelfde klok, liggend',
+      tekst:
+        'Leg de klok plat, in de rijrichting. Heen moet het licht de wegrijdende ' +
+        'spiegel inhalen: 2,00. Terug komt de spiegel het tegemoet: 0,50. Samen ' +
+        '2,50, precies 1,25 keer de rondgang in rust, zoals het hoort. Maar dat ' +
+        'komt alleen uit als de klok korter is: 0,80 van zijn eigen lengte.',
+      stel: { '#lk-tijd': 0.3 },
+      tik: ['#lk-delen button:nth-child(2)'],
+    },
+    {
+      kop: 'Twee linialen',
+      tekst:
+        'Dezelfde staaf langs twee linialen. Op die van de trein loopt hij van 0 ' +
+        'tot 1, op die van het perron maar tot 0,80. Het perron leest beide ' +
+        'uiteinden tegelijk af \u2014 tegelijk volgens het perron, en daar zit het ' +
+        'verschil. Onderaan: andersom gaat het net zo.',
+      tik: ['#lk-delen button:nth-child(3)'],
+    },
+    {
+      kop: 'Terug naar het diagram',
+      tekst:
+        'Beide uitkomsten liggen op de ijk-krommen van het Minkowski-diagram: 1,25 ' +
+        'op de tijd-as, 0,80 op de plaats-as. E\u00e9n tekening, twee manieren van ' +
+        'aflezen.',
+      tik: ['#lk-delen button:nth-child(4)'],
+    },
+  ],
+};
+
 const BREEDTE = 960;
 const HOOGTE = 940;
 

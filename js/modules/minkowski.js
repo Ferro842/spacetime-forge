@@ -9,6 +9,68 @@ export const onderschrift =
   'Objecten die samen vertrekken en uit elkaar lopen. Kies wiens kader je gebruikt: ' +
   'de wereldlijnen kantelen mee, de klokken niet.';
 
+// Het verhaal voor de uitlegmodus (js/uitlegmodus.js): de stappen in volgorde,
+// met per stap de stand van knoppen en schuiven. De getallen in de tekst horen
+// bij die stand; verander je de stand, reken ze dan opnieuw na.
+export const verhaal = {
+  basis: {
+    tik: ['#mk-aantal button:nth-child(2)', '#mk-kader button:nth-child(1)'],
+    aan: { '#mk-gelijk': true, '#mk-hyper': false },
+    stel: {
+      '#mk-regels .object-regel:nth-child(1) .naam-invoer': 'Anna',
+      '#mk-regels .object-regel:nth-child(2) .naam-invoer': 'Bram',
+      '#mk-regels .object-regel:nth-child(3) .naam-invoer': 'Carla',
+      '#mk-regels .object-regel:nth-child(1) input[type=range]': 0,
+      '#mk-regels .object-regel:nth-child(2) input[type=range]': 0.6,
+      '#mk-regels .object-regel:nth-child(3) input[type=range]': -0.35,
+      '#mk-nu': 3,
+    },
+  },
+  stappen: [
+    {
+      kop: 'Drie reizigers',
+      tekst:
+        'Anna blijft op het perron staan. Bram vertrekt met 0,6c naar rechts, Carla ' +
+        'met 0,35c naar links. Ze vertrekken samen, met hun klokken op nul. Elke ' +
+        'lijn is \u00e9\u00e9n levensloop door ruimte en tijd.',
+      stel: { '#mk-nu': 0 },
+    },
+    {
+      kop: 'Zelfde moment, andere klokken',
+      tekst:
+        'De rode lijn is \u00e9\u00e9n moment op het perron: ct\u00a0=\u00a03. Lees langs die lijn de ' +
+        'klokken af: Anna 3,00, Carla 2,81, Bram 2,40. Wie harder gaat, heeft ' +
+        'minder tijd beleefd.',
+    },
+    {
+      kop: 'Gelijke eigen tijd',
+      tekst:
+        'De krommen verbinden de punten waar ieders eigen klok hetzelfde aanwijst: ' +
+        '1, 2, 3. De stippen op elke lijn liggen er precies op. Hoe sneller je ' +
+        'gaat, hoe verder weg je volgende tik ligt.',
+      aan: { '#mk-hyper': true },
+    },
+    {
+      kop: 'Vanuit Bram',
+      tekst:
+        'Nu staat Bram stil en beweegt de rest. Anna gaat met 0,6c naar links, ' +
+        'Carla met 0,79c \u2014 niet met 0,95c: snelheden tellen niet gewoon op. En op ' +
+        'Brams "nu" is h\u00edj degene met de meeste tijd op zijn klok.',
+      aan: { '#mk-hyper': true },
+      tik: ['#mk-kader button:nth-child(3)'],
+    },
+    {
+      kop: 'Niemand is bijzonder',
+      tekst:
+        'Hetzelfde verhaal vanuit Carla. De lijnen kantelen en de klokstanden op ' +
+        'haar "nu" zijn weer anders, maar de krommen van gelijke eigen tijd liggen ' +
+        'precies waar ze lagen. Die heeft iedereen gemeen.',
+      aan: { '#mk-hyper': true },
+      tik: ['#mk-kader button:nth-child(4)'],
+    },
+  ],
+};
+
 // Diagramvak op het doelscherm: ongeveer 940 x 935 px, dus deze verhouding.
 const BREEDTE = 960;
 const HOOGTE = 940;

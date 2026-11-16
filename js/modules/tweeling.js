@@ -16,6 +16,78 @@ export const titel = 'Tweelingparadox';
 export const onderschrift =
   'Waar de tijd blijft die de reiziger overslaat \u2014 te zien aan de lijn die bij de omkeer doorslaat.';
 
+// Het verhaal voor de uitlegmodus (js/uitlegmodus.js): de stappen in volgorde,
+// met per stap de stand van knoppen en schuiven. De getallen in de tekst horen
+// bij die stand; verander je de stand, reken ze dan opnieuw na.
+export const verhaal = {
+  basis: {
+    aan: { '#tw-sein-aarde': false, '#tw-sein-schip': false },
+    stel: { '#tw-beta': 0.8, '#tw-duur': 5, '#tw-tijd': 0 },
+  },
+  stappen: [
+    {
+      kop: 'Vertrek',
+      tekst:
+        'Een tweeling, twee klokken op nul. De een blijft op aarde: de rechte lijn ' +
+        'omhoog. De ander vertrekt met 0,8c naar een ster op 4 lichtjaar, keert ' +
+        'daar om en komt terug.',
+    },
+    {
+      kop: 'Onderweg',
+      tekst:
+        'Na 3 jaar op aarde wijst de klok in het schip 1,8 jaar aan. Maar de ' +
+        'schuine lijn is wat de reiziger "nu" noemt, en volgens hem is het op aarde ' +
+        'pas 1,08 jaar. Elk vindt dat de klok van de ander trager loopt.',
+      stel: { '#tw-tijd': 0.3 },
+    },
+    {
+      kop: 'Het keerpunt',
+      tekst:
+        'Bij de ster draait het schip om, en zijn "nu" draait mee. De lijn klapt ' +
+        'van de ene helling naar de andere en slaat in \u00e9\u00e9n keer 6,4 jaar aardtijd ' +
+        'over. Daar zit het verschil: in de omkeer, niet in de klokken.',
+      tik: ['#tw-keer'],
+    },
+    {
+      kop: 'Thuiskomst',
+      tekst:
+        'Weer samen. Op aarde is 10 jaar verstreken, in het schip 6. Dat is geen ' +
+        'gezichtsbedrog: de reiziger is echt jonger. Zijn weg door de ruimtetijd ' +
+        'heeft een knik, die van de aarde niet.',
+      tik: ['#tw-eind'],
+    },
+    {
+      kop: 'Maar wat z\u00ede je onderweg?',
+      tekst:
+        'De blauwe lijn is licht dat de reiziger op dit moment binnenkrijgt. Het ' +
+        'vertrok toen het op aarde pas 0,60 jaar was: dat is wat hij door zijn ' +
+        'telescoop z\u00edet. Hij vlucht voor het licht uit, en ziet de aardklok ' +
+        'daardoor drie keer te traag lopen.',
+      aan: { '#tw-sein-aarde': true },
+      stel: { '#tw-tijd': 0.3 },
+    },
+    {
+      kop: 'Geen sprong te zien',
+      tekst:
+        'Na de omkeer vliegt hij het licht tegemoet. Nu ziet hij de aardklok drie ' +
+        'keer te snel lopen; hij staat al op 6,40. Nergens een sprong, en toch ' +
+        'klopt de som: 1 jaar aarde gezien op de heenweg, 9 jaar op de terugweg.',
+      aan: { '#tw-sein-aarde': true },
+      stel: { '#tw-tijd': 0.8 },
+    },
+    {
+      kop: 'Waar de symmetrie breekt',
+      tekst:
+        'Nu andersom: wat ziet de aarde? De bruine lijn is het licht van de omkeer. ' +
+        'Dat komt pas na 9 jaar aan, want het moest eerst 4 lichtjaar afleggen. De ' +
+        'aarde ziet het schip dus 9 jaar wegvliegen en maar 1 jaar terugkomen. Het ' +
+        'schip wisselt halverwege, de aarde pas vlak voor het eind.',
+      aan: { '#tw-sein-schip': true },
+      stel: { '#tw-tijd': 0.9 },
+    },
+  ],
+};
+
 const BREEDTE = 960;
 const HOOGTE = 940;
 const MARGE = { boven: 38, onder: 50, links: 66, rechts: 70 };

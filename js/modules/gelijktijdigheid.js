@@ -18,6 +18,68 @@ export const onderschrift =
   'eerder, in de trein allebei de kanten tegelijk. Speel de tijd af en kijk de ' +
   'twee nulijnen in het Minkowski-diagram uit elkaar lopen.';
 
+// Het verhaal voor de uitlegmodus (js/uitlegmodus.js): de stappen in volgorde,
+// met per stap de stand van knoppen en schuiven. De getallen in de tekst horen
+// bij die stand; verander je de stand, reken ze dan opnieuw na.
+export const verhaal = {
+  basis: {
+    tik: ['#gt-mink'],
+    aan: { '#gt-groot': false, '#gt-tikken': false, '#gt-aflezen': false, '#gt-hyper': false },
+    stel: { '#gt-beta': 0.6, '#gt-lengte': 1, '#gt-tijd': 0 },
+  },
+  stappen: [
+    {
+      kop: 'E\u00e9n flits, midden in de trein',
+      tekst:
+        'De trein rijdt met 0,6c naar rechts. Precies in het midden gaat een lamp ' +
+        'aan. Het licht vertrekt naar de achterkant en naar de voorkant. Boven zie ' +
+        'je het vanaf het perron, daaronder vanuit de trein zelf.',
+    },
+    {
+      kop: 'Het perron: achter eerst',
+      tekst:
+        'Vanaf het perron gezien rijdt de achterwand het licht tegemoet. Daar komt ' +
+        'het dus het eerst aan: al op t\u00a0=\u00a00,25.',
+      stel: { '#gt-tijd': 0.26 },
+    },
+    {
+      kop: 'En voor pas veel later',
+      tekst:
+        'De voorwand rijdt voor het licht uit; het moet hem inhalen. Dat lukt pas ' +
+        'op t\u00a0=\u00a01,00, vier keer zo laat. Voor het perron gebeuren de twee ' +
+        'aankomsten dus na elkaar.',
+      stel: { '#gt-tijd': 1.01 },
+    },
+    {
+      kop: 'In de trein: tegelijk',
+      tekst:
+        'Het middelste beeld. Wie in de trein zit, staat stil ten opzichte van de ' +
+        'lamp, met beide wanden even ver weg. Voor hem komt het licht voor en ' +
+        'achter op hetzelfde moment aan: t\u2032\u00a0=\u00a00,50. Dezelfde twee gebeurtenissen \u2014 ' +
+        'tegelijk voor de een, na elkaar voor de ander.',
+      stel: { '#gt-tijd': 0.63 },
+    },
+    {
+      kop: 'Het diagram laat zien waarom',
+      tekst:
+        'Onderaan staan beide aankomsten als punten in de ruimtetijd. Voor het ' +
+        'perron loopt "nu" vlak, en de punten liggen op verschillende hoogte. Voor ' +
+        'de trein loopt "nu" schuin: de bruine streepjeslijn. Die gaat precies door ' +
+        'allebei.',
+      stel: { '#gt-tijd': 0.63 },
+    },
+    {
+      kop: 'Klokken uit de pas',
+      tekst:
+        'Het gevolg: klokken die in de trein gelijk staan, staan vanaf het perron ' +
+        'gezien niet gelijk. De achterste loopt 0,60 voor op de voorste. En dat ' +
+        'verschil blijft: de drie lijnen lopen evenwijdig.',
+      stel: { '#gt-tijd': 0.5 },
+      tik: ['#gt-klok'],
+    },
+  ],
+};
+
 const BREEDTE = 960;
 const HOOGTE = 940;
 // Links extra ruimte voor de ct-getallen van het Minkowski-diagram. Beide

@@ -25,8 +25,11 @@
   </nav>
   <main id="inhoud">
     <header>
-      <h2 id="titel">Laden…</h2>
-      <p id="onderschrift"></p>
+      <div class="kop-tekst">
+        <h2 id="titel">Laden…</h2>
+        <p id="onderschrift"></p>
+      </div>
+      <button class="knop" id="uitleg-knop">Uitlegmodus</button>
     </header>
     <div id="module"></div>
   </main>
@@ -35,6 +38,7 @@
 <script type="module">
 import { registreer, moduleLijst } from './js/register.js';
 import { maakTabbladen } from './js/tabbladen.js';
+import { startUitlegmodus } from './js/uitlegmodus.js';
 
 // --- Modules aanmelden ---------------------------------------------------
 // Elke module is een los bestand dat een render(doel) exporteert.
@@ -103,13 +107,22 @@ const onderEl = document.getElementById('onderschrift');
 // tot je de app herlaadt.
 let tabVoorkeur = 'Bediening';
 
+// De module die nu in beeld staat, voor de uitlegmodus: die heeft het verhaal
+// van de module nodig en haar naam.
+let huidige = null;
+let sluitUitleg = null;
+
 async function ga(id) {
   const item = moduleLijst().find((m) => m.id === id);
   if (!item || !item.pad) return;
 
   for (const [k, knop] of knoppen) knop.classList.toggle('actief', k === id);
 
+  // Staat de uitlegmodus nog aan (terugknop van de browser), dan eerst netjes
+  // sluiten: anders blijft het menu verborgen bij een module zonder verhaal.
+  if (sluitUitleg) sluitUitleg();
   doel.innerHTML = '';
+  huidige = null;
   titelEl.textContent = item.naam;
   onderEl.textContent = '';
 
@@ -119,6 +132,7 @@ async function ga(id) {
     if (mod.onderschrift) onderEl.textContent = mod.onderschrift;
     mod.render(doel);
     maakTabbladen(doel, tabVoorkeur, (naam) => { tabVoorkeur = naam; });
+    huidige = { verhaal: mod.verhaal, naam: item.naam };
     location.hash = id;
   } catch (fout) {
     doel.innerHTML =
@@ -129,6 +143,13 @@ async function ga(id) {
     console.error(fout);
   }
 }
+
+// --- Uitlegmodus -----------------------------------------------------------
+document.getElementById('uitleg-knop').addEventListener('click', () => {
+  if (!huidige || sluitUitleg || !doel.querySelector('.diagram-vak')) return;
+  sluitUitleg = startUitlegmodus(doel, huidige.verhaal, huidige.naam,
+    () => { sluitUitleg = null; });
+});
 
 // Startmodule: uit de URL, anders welkom
 const start = location.hash.replace('#', '') || 'welkom';

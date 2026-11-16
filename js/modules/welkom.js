@@ -8,6 +8,60 @@ export const onderschrift =
   'Een werkbank voor de speciale relativiteitstheorie. Gebouwd voor één scherm, ' +
   'zodat elk diagram precies past en niets overlapt.';
 
+// Het verhaal voor de uitlegmodus (js/uitlegmodus.js): de stappen in volgorde,
+// met per stap de stand van knoppen en schuiven. De getallen in de tekst horen
+// bij die stand; verander je de stand, reken ze dan opnieuw na.
+export const verhaal = {
+  basis: {
+    aan: { '#nu-knop': false },
+    stel: { '#beta': 0.6 },
+  },
+  stappen: [
+    {
+      kop: 'Een kaart van ruimte en tijd',
+      tekst:
+        'Naar rechts is plaats, omhoog is tijd. Wie op het perron blijft staan, ' +
+        'gaat op deze kaart recht omhoog: alleen de tijd verstrijkt. De gestreepte ' +
+        'lijnen onder 45\u00b0 zijn licht dat hier en nu vertrekt. De trein rijdt nog ' +
+        'bijna niet.',
+      stel: { '#beta': 0.05 },
+    },
+    {
+      kop: 'De trein gaat rijden',
+      tekst:
+        'Nu rijdt hij met 0,6 keer de lichtsnelheid. Zijn spoor door de ruimtetijd, ' +
+        'de lijn ct\u2032, helt naar rechts: elke eenheid tijd komt hij 0,6 verder. Hoe ' +
+        'sneller, hoe schuiner \u2014 maar nooit voorbij de 45\u00b0 van het licht.',
+    },
+    {
+      kop: 'De klok in de trein',
+      tekst:
+        'De stippen staan op perrontijd 1, 2 en 3. Ernaast staat wat de klok in de ' +
+        'trein op dat moment aanwijst: bij ct\u00a0=\u00a02 pas \u03c4\u00a0=\u00a01,60. De bewegende klok ' +
+        'loopt achter, hier op 0,8 van het tempo.',
+    },
+    {
+      kop: 'Wat de trein "nu" noemt',
+      tekst:
+        'De stippellijnen verbinden alles wat voor de trein op hetzelfde moment ' +
+        'gebeurt. Voor het perron ligt zo\'n lijn vlak, voor de trein helt hij. Ze ' +
+        'zijn het dus niet eens over wat gelijktijdig is. Onthoud dat: alles wat ' +
+        'volgt komt hieruit voort.',
+      aan: { '#nu-knop': true },
+    },
+    {
+      kop: 'Sneller',
+      tekst:
+        'Bij 0,9c klappen de twee assen van de trein als een schaar naar de ' +
+        'lichtlijn toe. Zijn klok loopt nog maar op 0,44 van het tempo. De ' +
+        'lichtlijn zelf blijft staan waar hij stond: iedereen meet dezelfde ' +
+        'lichtsnelheid.',
+      aan: { '#nu-knop': true },
+      stel: { '#beta': 0.9 },
+    },
+  ],
+};
+
 // Maat van het diagramvak op het doelscherm: ongeveer 940 x 935 px.
 // De viewBox volgt die verhouding, zodat er geen strook leeg blijft.
 const BREEDTE = 960;

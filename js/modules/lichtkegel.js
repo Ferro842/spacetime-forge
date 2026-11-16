@@ -17,6 +17,72 @@ export const onderschrift =
   'Welke gebeurtenissen kunnen elkaar be\u00efnvloeden, en welke staan voor altijd los ' +
   'van elkaar? Sleep het punt rond en lees het antwoord af.';
 
+// Het verhaal voor de uitlegmodus (js/uitlegmodus.js): de stappen in volgorde,
+// met per stap de stand van knoppen en schuiven. De getallen in de tekst horen
+// bij die stand; verander je de stand, reken ze dan opnieuw na.
+export const verhaal = {
+  basis: {
+    aan: { '#lk-telegraaf': false },
+    stel: { '#lk-beta': 0 },
+    stand: { evT: 1.6, evX: 0.9 },
+  },
+  stappen: [
+    {
+      kop: 'Hier en nu',
+      tekst:
+        'De stip in het midden ben jij, hier en nu. De twee schuine lijnen zijn ' +
+        'licht dat nu bij je aankomt of nu vertrekt: samen de lichtkegel. De andere ' +
+        'stip is een gebeurtenis ergens anders, op een ander moment. Je kunt hem ' +
+        'verslepen.',
+    },
+    {
+      kop: 'Binnen de kegel',
+      tekst:
+        'Deze gebeurtenis ligt binnen de kegel: een signaal van jou is er op tijd. ' +
+        'Je kunt hem dus veroorzaken. En voor iedere waarnemer, hoe snel ook, ' +
+        'blijft de volgorde hetzelfde: eerst jij, dan hij.',
+      stel: { '#lk-beta': 0.6 },
+    },
+    {
+      kop: 'Buiten de kegel',
+      tekst:
+        'Hier komt zelfs licht te laat. Jij kunt deze gebeurtenis niet veroorzaken, ' +
+        'en hij jou niet. Voor jou ligt hij in de toekomst, op t\u00a0=\u00a00,80.',
+      stand: { evT: 0.8, evX: 2.0 },
+    },
+    {
+      kop: 'De volgorde draait om',
+      tekst:
+        'Kijk mee met iemand die met 0,6c voorbijkomt. De blauwe streepjeslijn is ' +
+        'zijn "nu", en de gebeurtenis ligt eronder: voor hem is het al gebeurd, op ' +
+        't\u2032\u00a0=\u00a0\u22120,50. Buiten de kegel ligt de volgorde niet vast. Geen probleem, ' +
+        'zolang er niets tussen die twee heen en weer kan.',
+      stel: { '#lk-beta': 0.6 },
+      stand: { evT: 0.8, evX: 2.0 },
+    },
+    {
+      kop: 'Stel dat het sneller kon',
+      tekst:
+        'Stuur toch een bericht sneller dan het licht naar die gebeurtenis, en laat ' +
+        'een relais daar meteen antwoorden. Zolang het relais stilstaat is het ' +
+        'antwoord gewoon later terug dan de vraag vertrok. Vreemd, maar nog geen ' +
+        'ramp.',
+      aan: { '#lk-telegraaf': true },
+      stand: { evT: 0.8, evX: 2.0 },
+    },
+    {
+      kop: 'Waarom het fataal is',
+      tekst:
+        'Laat het relais met 0,70c bewegen. "Meteen" betekent dan meteen in z\u00edjn ' +
+        'kader, en zijn nu-lijn loopt schuin omlaag. Het antwoord is terug op ' +
+        't\u00a0=\u00a0\u22120,60: voordat de vraag gesteld was. Daarom kan niets sneller dan het ' +
+        'licht.',
+      stand: { evT: 0.8, evX: 2.0 },
+      tik: ['#lk-paradox'],
+    },
+  ],
+};
+
 // Maat van het diagramvak op het doelscherm: ongeveer 940 x 935 px.
 const BREEDTE = 960;
 const HOOGTE = 940;
@@ -748,6 +814,15 @@ export function render(doel) {
     beta = Math.round(doelBeta * 100) / 100;
     schuif.value = String(beta);
     betaW.textContent = F.nl(beta, 2) + 'c';
+    teken();
+  });
+
+  // De gebeurtenis heeft geen schuif, alleen een vinger. De uitlegmodus zet
+  // hem daarom met een bericht op zijn plek (zie js/uitlegmodus.js).
+  vak.addEventListener('verhaal-stand', function (e) {
+    const s = e.detail || {};
+    if (typeof s.evT === 'number') evT = s.evT;
+    if (typeof s.evX === 'number') evX = s.evX;
     teken();
   });
 

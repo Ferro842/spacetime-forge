@@ -9,6 +9,57 @@ export const titel = 'Minkowski-diagram Pro';
 export const onderschrift =
   'Twee assenstelsels in \u00e9\u00e9n tekening, met de ijk-hyperbool als gemeenschappelijke maatlat.';
 
+// Het verhaal voor de uitlegmodus (js/uitlegmodus.js): de stappen in volgorde,
+// met per stap de stand van knoppen en schuiven. De getallen in de tekst horen
+// bij die stand; verander je de stand, reken ze dan opnieuw na.
+export const verhaal = {
+  basis: {
+    tik: ['#mp-terug'],
+    aan: { '#mp-kader': false, '#mp-hyper': true },
+    stel: { '#mp-beta': 0.6 },
+  },
+  stappen: [
+    {
+      kop: 'Twee assenstelsels',
+      tekst:
+        'Het rechte stelsel is van het perron, het gekantelde van een trein die met ' +
+        '0,6c rijdt. Dezelfde gebeurtenis heeft in elk stelsel een eigen plaats en ' +
+        'tijd. Maar waar ligt op die schuine assen de 1?',
+      aan: { '#mp-hyper': false },
+    },
+    {
+      kop: 'De maatlat is een kromme',
+      tekst:
+        'Bij een gewone draaiing legt een cirkel de eenheid vast. Hier doet een ' +
+        'hyperbool dat: elk punt erop ligt \u00e9\u00e9n eenheid van de oorsprong, wie er ook ' +
+        'meet. Waar een as de kromme snijdt, staat zijn eigen 1.',
+    },
+    {
+      kop: 'De klok aflezen',
+      tekst:
+        'Volg de tijd-as van de trein tot de kromme: daar tikt de treinklok \u00e9\u00e9n. Ga ' +
+        'van daar vlak opzij naar de tijd-as van het perron en je leest 1,25 af. Op ' +
+        'het perron is dus meer tijd verstreken dan in de trein.',
+    },
+    {
+      kop: 'De meetlat aflezen',
+      tekst:
+        'Het uiteinde van een meetlat in de trein ligt waar de x\u2032-as de andere ' +
+        'kromme snijdt. Volg het spoor van dat uiteinde omlaag naar de x-as van het ' +
+        'perron: 0,80. Het perron meet de lat korter, omdat het beide uiteinden op ' +
+        'z\u00edjn moment afleest.',
+    },
+    {
+      kop: 'Andersom',
+      tekst:
+        'Kijk nu vanuit de trein. Hetzelfde beeld, gespiegeld: nu beweegt het ' +
+        'perron, met dezelfde 1,25 en dezelfde 0,80. Allebei zien ze de klok van de ' +
+        'ander trager en zijn meetlat korter \u2014 en allebei hebben ze gelijk.',
+      aan: { '#mp-kader': true },
+    },
+  ],
+};
+
 const BREEDTE = 960;
 const HOOGTE = 940;
 const MARGE = { boven: 36, onder: 48, links: 64, rechts: 66 };

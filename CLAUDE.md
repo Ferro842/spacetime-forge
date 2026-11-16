@@ -42,11 +42,12 @@ js/fysica.js          alle relativistische berekeningen, pure functies
 js/teken.js           gedeelde SVG-helpers
 js/register.js        modulelijst
 js/tabbladen.js       verdeelt de zijkolom van elke module over tabbladen
+js/uitlegmodus.js     de app als uitlegbord: verhaal in stappen, met tekenlaag
 js/modules/*.js       één bestand per module, exporteert render(doel)
 manifest.json, sw.js  PWA en offline-cache
 ```
 
-Een module exporteert `titel`, `onderschrift` en `render(doel)`. Nieuwe
+Een module exporteert `titel`, `onderschrift`, `verhaal` en `render(doel)`. Nieuwe
 modules aanmelden in `index.html` (de GROEPEN-lijst) én toevoegen aan de
 cachelijst in `sw.js`, en daar het versienummer ophogen.
 
@@ -83,6 +84,20 @@ als de kop niet met "Vragen" begint), de rest is Getallen. Wil je het anders,
 zet dan `data-tab="..."` op het paneel. Wat samen in beeld past wordt
 samengevoegd, dus een lichte module heeft alleen Bediening en Uitleg. Een
 module regelt zelf geen tabbladen en klapt de uitleg niet zelf open of dicht.
+
+**Uitlegmodus:** de knop rechtsboven verbergt menu, kop en zijkolom en zet
+naast de tekening één stap van een verhaal in grote letters, met een tekenlaag
+voor vinger of pen. Een module levert dat verhaal als gegevens, niet als code:
+`export const verhaal = { basis, stappen }`. Elke stap heeft een `kop`, een
+`tekst` en de stand die erbij hoort: `aan` (schakelknoppen), `stel` (schuiven
+en tekstvelden), `tik` (knoppen) en zo nodig `stand` (voor wat geen knop heeft;
+komt aan als het event `verhaal-stand` op het `.diagram-vak`, zie de
+lichtkegel). De precieze afspraken staan bovenaan `js/uitlegmodus.js`. Elke
+stap begint bij de basis, dus een stap mag niet leunen op de vorige. De
+getallen in een tekst horen bij de stand van die stap: verander je de stand of
+de natuurkunde, reken de tekst dan na. Houd een tekst onder de 300 tekens, dan
+past hij zonder schuiven. Een knop waar een verhaal naar wijst mag je niet
+zomaar hernoemen of weghalen.
 
 **Touch:** koppel touch-handlers met `addEventListener(..., {passive:false})`.
 De standaardhandlers zijn soms passive, en dan blokkeert `preventDefault()`

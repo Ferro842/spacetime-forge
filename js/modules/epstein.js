@@ -12,6 +12,56 @@ export const onderschrift =
   'Een ander mentaal model: je beweegt altijd met de lichtsnelheid door ruimtetijd. ' +
   'Sleep het punt over de boog en verdeel die snelheid tussen ruimte en tijd.';
 
+// Het verhaal voor de uitlegmodus (js/uitlegmodus.js): de stappen in volgorde,
+// met per stap de stand van knoppen en schuiven. De getallen in de tekst horen
+// bij die stand; verander je de stand, reken ze dan opnieuw na.
+export const verhaal = {
+  basis: {
+    stel: { '#ep-beta': 0.6 },
+  },
+  stappen: [
+    {
+      kop: 'Altijd even snel',
+      tekst:
+        'Het beeld van Epstein: alles beweegt altijd met dezelfde snelheid, c, door ' +
+        'ruimte en tijd samen. De paarse pijl heeft dus een vaste lengte. Sta je ' +
+        'stil, dan wijst hij recht omhoog: al je snelheid gaat door de tijd.',
+      stel: { '#ep-beta': 0 },
+    },
+    {
+      kop: 'Een heel klein beetje opzij',
+      tekst:
+        'Het ruimtestation haalt 7,7 kilometer per seconde. Op deze schaal is de ' +
+        'pijl niet van recht omhoog te onderscheiden. Daarom merken we in het ' +
+        'dagelijks leven niets van relativiteit.',
+      tik: ['ISS'],
+    },
+    {
+      kop: 'Echt snel',
+      tekst:
+        'Bij 0,6c draait de pijl flink opzij. Wat hij naar rechts wint, levert hij ' +
+        'omhoog in: door de tijd gaat hij nog maar met 0,80. Je klok loopt op 80 ' +
+        'procent.',
+    },
+    {
+      kop: 'Bijna licht',
+      tekst:
+        'Bij 0,99c ligt de pijl bijna plat. Voor de tijd blijft 0,14 over: je klok ' +
+        'kruipt.',
+      stel: { '#ep-beta': 0.99 },
+    },
+    {
+      kop: 'Waarom niets sneller kan',
+      tekst:
+        'De pijl kan draaien, niet groeien. Helemaal plat is licht: alle snelheid ' +
+        'door de ruimte, niets meer door de tijd. Verder draaien bestaat niet. Let ' +
+        'wel: dit beeld klopt voor het tempo van klokken, niet voor wat ' +
+        'gelijktijdig is.',
+      stel: { '#ep-beta': 0.99 },
+    },
+  ],
+};
+
 // Een kwartcirkel is van nature vierkant, dus deze viewBox ook. Is het
 // diagramvak breder dan hoog, dan blijft er links en rechts ruimte over;
 // dat is hier beter dan een uitgerekte cirkel.
