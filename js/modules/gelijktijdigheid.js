@@ -94,7 +94,6 @@ export function render(doel) {
 
   const uitleg = document.createElement('details');
   uitleg.className = 'uitleg';
-  uitleg.open = true;
   uitleg.innerHTML =
     '<summary>Twee beelden van dezelfde flits</summary>' +
     '<p>Midden in de trein gaat een lamp aan. Op het <b>perron</b> rijdt de ' +

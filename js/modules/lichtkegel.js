@@ -69,7 +69,6 @@ export function render(doel) {
 
   const uitleg = document.createElement('details');
   uitleg.className = 'uitleg';
-  uitleg.open = true;
   uitleg.innerHTML =
     '<summary>Wat de kegel verdeelt</summary>' +
     '<p>De twee schuine lijnen zijn de paden van licht door de oorsprong. ' +

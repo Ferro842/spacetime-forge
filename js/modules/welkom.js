@@ -20,7 +20,6 @@ export function render(doel) {
 
   const uitleg = document.createElement('details');
   uitleg.className = 'uitleg';
-  uitleg.open = true;
   uitleg.innerHTML =
     '<summary>Het fundament staat</summary>' +
     '<p>Dit diagram gebruikt de bouwstenen van alle komende modules: één ' +

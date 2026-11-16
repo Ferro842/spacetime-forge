@@ -58,7 +58,6 @@ export function render(doel) {
 
   const uitleg = document.createElement('details');
   uitleg.className = 'uitleg';
-  uitleg.open = true;
   uitleg.innerHTML =
     '<summary>Alles uit \u00e9\u00e9n lichtstraal</summary>' +
     '<p>Een lichtklok is twee spiegels met een lichtpuls ertussen. Staat hij ' +

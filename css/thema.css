@@ -29,6 +29,9 @@
   --nav-breedte: 248px;
   --zijkolom:    340px;     /* bedieningskolom rechts van het diagram */
   --vak-gat:     14px;      /* ruimte tussen diagram en zijkolom */
+  /* Kleinste maat van alles wat je met een vinger moet raken. Apple houdt
+     44 punten aan; kleiner en je tikt ernaast. */
+  --raak:        44px;
   --radius:      12px;
   --radius-klein: 8px;
   --schaduw:     0 1px 2px rgba(22,32,46,.06), 0 4px 14px rgba(22,32,46,.05);
@@ -79,6 +82,7 @@ html, body {
 }
 #nav button {
   display: block; width: 100%; text-align: left;
+  min-height: var(--raak);
   padding: 9px 12px; margin-bottom: 2px;
   background: none; border: none; border-radius: var(--radius-klein);
   font: inherit; font-size: 14px; color: var(--tekst);
@@ -112,9 +116,15 @@ html, body {
 }
 
 /* ---- Werkblad: diagram links, bediening rechts ----
-   Elke module levert dezelfde drie soorten kinderen aan: een .uitleg over de
-   volle breedte, een .diagram-vak links en een .zijkolom rechts. De indeling
-   zit hier, zodat geen module hem zelf hoeft te regelen. */
+   Elke module levert dezelfde drie soorten kinderen aan: een .uitleg, een
+   .diagram-vak en een .zijkolom. De indeling zit hier, zodat geen module hem
+   zelf hoeft te regelen.
+
+   Het diagram krijgt de volle hoogte van het werkblad. De uitleg stond eerst
+   over de hele breedte erboven en kostte het diagram 100 tot 220 px hoogte;
+   bij de langste tekst kromp de kleinste letter in de tekening tot onder de
+   10 px. Nu staat hij boven de zijkolom: het diagram verandert niet meer van
+   maat als je hem open- of dichtklapt, en je leest hem naast de tekening. */
 #module {
   flex: 1; min-height: 0;
   display: grid;
@@ -122,8 +132,12 @@ html, body {
   grid-template-rows: auto minmax(0, 1fr);
   gap: var(--vak-gat);
 }
-#module > .uitleg      { grid-column: 1 / -1; grid-row: 1; margin: 0; }
-#module > .diagram-vak { grid-column: 1; grid-row: 2; margin: 0; min-height: 0; }
+#module > .diagram-vak { grid-column: 1; grid-row: 1 / -1; margin: 0; min-height: 0; }
+/* Open mag de uitleg hooguit de halve kolom vullen en schuift dan zelf, zodat
+   de bediening eronder altijd bereikbaar blijft. */
+#module > .uitleg      { grid-column: 2; grid-row: 1; margin: 0;
+                         max-height: 46vh; max-height: 46dvh; overflow-y: auto;
+                         -webkit-overflow-scrolling: touch; }
 #module > .zijkolom    { grid-column: 2; grid-row: 2; min-height: 0; }
 /* Een foutmelding vult het hele werkblad */
 #module > .fout        { grid-column: 1 / -1; grid-row: 1 / -1; align-self: start; }
@@ -174,21 +188,22 @@ html, body {
   font-size: 15px; font-weight: 600;
 }
 input[type=range] {
-  width: 100%; height: 30px; margin: 0;
+  width: 100%; height: var(--raak); margin: 0;
   -webkit-appearance: none; background: none;
 }
 input[type=range]::-webkit-slider-runnable-track {
   height: 5px; border-radius: 3px; background: var(--rand-sterk);
 }
 input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 28px; height: 28px; margin-top: -11px;
+  -webkit-appearance: none; width: 32px; height: 32px; margin-top: -13.5px;
   border-radius: 50%; background: var(--blauw);
   border: 3px solid var(--kaart); box-shadow: 0 1px 4px rgba(0,0,0,.25);
 }
 
 .knoppen { display: flex; gap: 8px; flex-wrap: wrap; }
 .knop {
-  padding: 8px 14px; font: inherit; font-size: 13.5px; font-weight: 550;
+  min-height: var(--raak); min-width: var(--raak);
+  padding: 0 16px; font: inherit; font-size: 14.5px; font-weight: 550;
   background: var(--kaart); color: var(--tekst);
   border: 1px solid var(--rand-sterk); border-radius: 999px;
   cursor: pointer; transition: all .12s;
@@ -197,6 +212,9 @@ input[type=range]::-webkit-slider-thumb {
 .knop.aan {
   background: var(--blauw); color: #fff; border-color: var(--blauw);
 }
+/* Zichtbaar indrukken: op een aanraakscherm is er geen muisaanwijzer die
+   laat zien dat je raak hebt getikt. */
+.knop:active { transform: scale(0.96); }
 .knop:disabled {
   opacity: .45; cursor: default;
 }
@@ -217,8 +235,9 @@ input[type=range]::-webkit-slider-thumb {
   font-variant-numeric: tabular-nums;
 }
 
-/* Compacte keuzeknop voor rijtjes: aantal objecten, kaderkeuze */
-.knop.klein { padding: 5px 11px; font-size: 12.5px; }
+/* Compacte keuzeknop voor rijtjes: aantal objecten, kaderkeuze. Smaller en
+   met een kleinere letter, maar even hoog als elke andere knop. */
+.knop.klein { padding: 0 12px; font-size: 13.5px; }
 
 /* Paneelkop met een rij knoppen ernaast, zodat er geen regel verloren gaat */
 .paneel-kop { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
@@ -231,9 +250,9 @@ input[type=range]::-webkit-slider-thumb {
 /* Eén object per regel: naam, snelheidsschuif en de waarde ernaast.
    Alles op dezelfde regel, want de kolom heeft geen hoogte te verspelen. */
 .object-regel { display: flex; align-items: center; gap: 7px; padding: 1px 0; }
-.object-regel input[type=range] { flex: 1; min-width: 0; height: 28px; }
+.object-regel input[type=range] { flex: 1; min-width: 0; }
 .naam-invoer {
-  width: 78px; flex: none; padding: 2px 2px;
+  width: 78px; flex: none; padding: 2px 2px; height: var(--raak);
   font: inherit; font-size: 13px; color: var(--tekst);
   background: none; border: none; border-bottom: 2px solid var(--rand-sterk);
   border-radius: 0;
@@ -290,7 +309,7 @@ input[type=range]::-webkit-slider-thumb {
 
 .uitleg {
   background: var(--blauw-zacht); border: 1px solid #cfe0f2;
-  border-radius: var(--radius); padding: 10px 16px;
+  border-radius: var(--radius); padding: 0 16px;
   font-size: 14px; line-height: 1.6; color: #14324f;
   margin-bottom: 14px;
 }
@@ -298,16 +317,20 @@ input[type=range]::-webkit-slider-thumb {
 .uitleg p { margin: 0; }
 /* Inklapbaar: dichtgeklapt levert de regel ruimte op voor het diagram */
 .uitleg > summary {
+  min-height: var(--raak);
   cursor: pointer; list-style: none; display: flex; align-items: center;
   font-size: 13px; font-weight: 650; color: var(--blauw);
   text-transform: uppercase; letter-spacing: 0.05em;
 }
 .uitleg > summary::-webkit-details-marker { display: none; }
 .uitleg > summary::after {
-  content: '\25be'; margin-left: auto; font-size: 15px; transition: transform .15s;
+  content: '\25be'; margin-left: auto; padding-left: 10px; font-size: 15px;
 }
-.uitleg[open] > summary { margin-bottom: 7px; }
-.uitleg[open] > summary::after { transform: rotate(180deg); }
+.uitleg[open] > summary { margin-bottom: 2px; }
+.uitleg[open] { padding-bottom: 13px; }
+/* Een eigen teken voor de open stand; een gedraaid pijltje viel in de smalle
+   kolom scheef uit. */
+.uitleg[open] > summary::after { content: '\25b4'; }
 .bron {
   font-size: 12px; color: var(--tekst-zacht); font-style: italic;
   margin-top: 8px;
@@ -327,8 +350,9 @@ input[type=range]::-webkit-slider-thumb {
   background: var(--kaart-2);
 }
 .formule > summary {
+  min-height: var(--raak);
   cursor: pointer; list-style: none; display: flex; align-items: center;
-  padding: 7px 11px; font-size: 13px; font-weight: 600; color: var(--tekst);
+  padding: 7px 11px; font-size: 13.5px; font-weight: 600; color: var(--tekst);
 }
 .formule > summary::-webkit-details-marker { display: none; }
 .formule > summary::after {
@@ -366,14 +390,14 @@ input[type=range]::-webkit-slider-thumb {
   position: absolute; top: 10px; left: 10px;
   display: flex; align-items: center; gap: 8px;
   background: rgba(255,255,255,.92); border: 1px solid var(--rand);
-  border-radius: 999px; padding: 4px 10px;
-  font-size: 12px; color: var(--tekst-zacht);
+  border-radius: 999px; padding: 0 6px;
+  font-size: 13px; color: var(--tekst-zacht);
   font-variant-numeric: tabular-nums;
 }
 /* Linksonder in plaats van linksboven, waar het vaantje staat */
 .zoom-overlay.onder { top: auto; bottom: 10px; }
 .zoom-overlay button {
   background: none; border: none; color: var(--blauw);
-  font: inherit; font-size: 12px; cursor: pointer;
-  text-decoration: underline; padding: 0;
+  font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+  min-width: var(--raak); min-height: var(--raak); padding: 0 6px;
 }

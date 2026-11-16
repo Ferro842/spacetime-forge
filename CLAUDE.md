@@ -69,6 +69,14 @@ Markeer assen, lijnen en stippen vooraf als bezet met `blokkeerLijn`,
 `var(--licht)`, `var(--accent)`, `var(--blauw)`). Nooit vaste hexwaarden in
 een module. Contrast minimaal 4,5:1 op de lichte achtergrond.
 
+**Vingerformaat:** alles wat je aantikt is minstens 44 px hoog. Dat regelt
+`css/thema.css` met `--raak` voor `.knop`, schuiven, menuknoppen en de koppen
+van inklapbare blokken; maak in een module geen eigen, kleinere knoppen.
+
+**Indeling:** het diagram krijgt de volle hoogte van het werkblad. De `.uitleg`
+staat boven de zijkolom, is standaard dicht en schuift zelf als hij lang is.
+`index.html` zet hem open of dicht; een module doet dat niet zelf.
+
 **Touch:** koppel touch-handlers met `addEventListener(..., {passive:false})`.
 De standaardhandlers zijn soms passive, en dan blokkeert `preventDefault()`
 de paginascroll niet — met als gevolg dat verticaal slepen hapert.

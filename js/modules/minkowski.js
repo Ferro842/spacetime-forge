@@ -77,7 +77,6 @@ export function render(doel) {
   // --- Bouwstenen in het werkblad ---------------------------------------
   const uitleg = document.createElement('details');
   uitleg.className = 'uitleg';
-  uitleg.open = true;
   uitleg.innerHTML =
     '<summary>Hetzelfde verhaal, een ander kader</summary>' +
     '<p>Alle objecten vertrekken samen uit de oorsprong, met hun klok op nul. Kies ' +

@@ -85,7 +85,6 @@ export function render(doel) {
 
   const uitleg = document.createElement('details');
   uitleg.className = 'uitleg';
-  uitleg.open = true;
   uitleg.innerHTML =
     '<summary>Twee verhalen die allebei waar zijn</summary>' +
     '<p>Bovenaan staan <b>allebei de kaders op hetzelfde moment</b>. Dat moment is ' +
@@ -527,7 +526,9 @@ export function render(doel) {
       if (Math.abs(spul.vStaaf) > 1e-9 || Math.abs(spul.vLoods) > 1e-9) {
         const beweegt = Math.abs(spul.vStaaf) > 1e-9;
         const v = beweegt ? spul.vStaaf : spul.vLoods;
-        const midden = beweegt ? (pA + pV) / 2 : (pIn + pUit) / 2;
+        // Onder het midden van de staaf staat zijn maatlabel al, dus schuift
+        // de pijl daar een eind naast.
+        const midden = beweegt ? (pA + pV) / 2 + (v > 0 ? 78 : -78) : (pIn + pUit) / 2;
         const px = Math.max(rand.links + 40, Math.min(rand.rechts - 40, midden));
         const y = band.vloer + 9, eind = px + (v > 0 ? 32 : -32);
         svg.appendChild(T.el('line', {
@@ -949,13 +950,12 @@ export function render(doel) {
   function vulWaarden(o) {
     const kaarten = [
       ['\u03b3', F.nl(o.g, 3), 'var(--tekst)'],
-      ['De loods meet de staaf', F.nl(o.Lkort, 2) + ' m van ' + F.nl(L, 2),
+      ['Loods meet staaf van ' + F.nl(L, 1) + ' m', F.nl(o.Lkort, 2) + ' m',
        'var(--trein)'],
-      ['De staaf meet de loods', F.nl(o.Dkort, 2) + ' m van ' + F.nl(D, 2),
+      ['Staaf meet loods van ' + F.nl(D, 1) + ' m', F.nl(o.Dkort, 2) + ' m',
        'var(--perron)'],
-      ['Deuren tegelijk dicht?',
-       'loods ja, staaf nee (' + F.nl(o.tStaafIn - o.tStaafUit, 2) + ' m ertussen)',
-       'var(--gebeurtenis)'],
+      ['Tussen de sluitingen: loods 0, staaf',
+       F.nl(o.tStaafIn - o.tStaafUit, 2) + ' m', 'var(--gebeurtenis)'],
     ];
     waarden.innerHTML = kaarten.map(function (k) {
       return '<div class="waarde-kaart"><div class="k">' + k[0] + '</div>' +

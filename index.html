@@ -97,6 +97,11 @@ const doel = document.getElementById('module');
 const titelEl = document.getElementById('titel');
 const onderEl = document.getElementById('onderschrift');
 
+// De uitleg staat boven de zijkolom en is standaard dicht, zodat de bediening
+// bovenaan staat. Klap je hem open, dan blijft hij open als je naar een andere
+// module gaat — tot je de app herlaadt.
+let uitlegOpen = false;
+
 async function ga(id) {
   const item = moduleLijst().find((m) => m.id === id);
   if (!item || !item.pad) return;
@@ -112,6 +117,11 @@ async function ga(id) {
     if (mod.titel) titelEl.textContent = mod.titel;
     if (mod.onderschrift) onderEl.textContent = mod.onderschrift;
     mod.render(doel);
+    const uitleg = doel.querySelector('.uitleg');
+    if (uitleg) {
+      uitleg.open = uitlegOpen;
+      uitleg.addEventListener('toggle', () => { uitlegOpen = uitleg.open; });
+    }
     location.hash = id;
   } catch (fout) {
     doel.innerHTML =

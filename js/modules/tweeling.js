@@ -59,7 +59,6 @@ export function render(doel) {
 
   const uitleg = document.createElement('details');
   uitleg.className = 'uitleg';
-  uitleg.open = true;
   uitleg.innerHTML =
     '<summary>De tijd die niemand meemaakt</summary>' +
     '<p>De rode lijn is het <b>nu</b> van de reiziger: alles wat voor h\u00e9m op dit ' +

@@ -24,7 +24,6 @@ export function render(doel) {
 
   const uitleg = document.createElement('details');
   uitleg.className = 'uitleg';
-  uitleg.open = true;
   uitleg.innerHTML =
     '<summary>Waarom een cirkel?</summary>' +
     '<p>De snelheid door de ruimte en de snelheid door de tijd vormen samen ' +

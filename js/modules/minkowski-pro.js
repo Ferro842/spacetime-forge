@@ -60,7 +60,6 @@ export function render(doel) {
 
   const uitleg = document.createElement('details');
   uitleg.className = 'uitleg';
-  uitleg.open = true;
   uitleg.innerHTML =
     '<summary>De ijk-hyperbool is de maatlat</summary>' +
     '<p>Het rechte assenstelsel is dat van het kader waaruit je kijkt, het ' +
