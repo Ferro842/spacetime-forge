@@ -34,12 +34,31 @@ export function snelheidOptellen(b1, b2) {
   return (b1 + b2) / noemer;
 }
 
+/** Rapiditeit: de hyperbolische hoek die bij een snelheid hoort. Snelheden
+ *  tellen niet op, deze hoeken wel: tanh(a + b) is precies de
+ *  relativistische som van tanh(a) en tanh(b). */
+export function rapiditeit(beta) {
+  return Math.atanh(beta);
+}
+
+/** De snelheid die bij een hyperbolische hoek hoort. */
+export function snelheidBijRapiditeit(hoek) {
+  return Math.tanh(hoek);
+}
+
 /** Snelheid van een object (beta_obj) gezien vanuit een kader dat zelf
  *  met beta_ref beweegt. */
 export function naarKader(betaObj, betaRef) {
   const noemer = 1 - betaObj * betaRef;
   if (Math.abs(noemer) < 1e-12) return NaN;
   return (betaObj - betaRef) / noemer;
+}
+
+/** Welk tijdstip op plaats xDoel is, voor een waarnemer met snelheid beta,
+ *  gelijktijdig met de gebeurtenis (t, x)? Volgt uit t' = gamma(t - beta*x):
+ *  gelijke t' betekent gelijke t - beta*x. c = 1. */
+export function gelijktijdigOp(t, x, beta, xDoel = 0) {
+  return t - beta * (x - xDoel);
 }
 
 /** Lorentz-transformatie van een gebeurtenis (t, x) naar een kader dat

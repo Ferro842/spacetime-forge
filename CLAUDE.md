@@ -151,8 +151,8 @@ formule nodig is, hoort er een zichtbare tegenhanger bij.
 ## Modules
 
 De vijf modules van de oorspronkelijke bouwlijst zijn af; de staaf in de
-loods kwam er later bij. Negen in totaal, in `index.html` verdeeld over drie
-groepen. Hieronder in diezelfde volgorde, met wat er in zit, zodat je niet
+loods en het optellen van snelheden kwamen er later bij. Tien in totaal, in
+`index.html` verdeeld over drie groepen. Hieronder in diezelfde volgorde, met wat er in zit, zodat je niet
 elk bestand hoeft te openen.
 
 **Fundament**
@@ -204,24 +204,35 @@ elk bestand hoeft te openen.
   tot een factor zes bij hoge snelheid. Het bovenste toneel meldt dan zelf dat
   de staaf buiten beeld is; dat is geen fout maar het gevolg van twee sneden
   met een andere hoek.
-- **Epstein-cirkel** (`epstein.js`) — de cirkel waarin ruimte en tijd samen
-  altijd c opleveren.
+- **Snelheden optellen** (`optellen.js`) — één tot vier raketten op elkaar, elk
+  met dezelfde snelheid ten opzichte van de trap eronder. Bovenaan twee
+  linialen: de hoek φ (rapiditeit), waar elke trap dezelfde stap zet, en de
+  snelheid, waar die stappen tegen c aan krimpen. Daaronder het diagram met de
+  ijk-hyperbool: de hoek tussen twee wereldlijnen is het oppervlak van de wig
+  ertussen (½φ), en dat is voor elke trap even groot, vanuit welk kader je ook
+  kijkt. De dunne lijn ct = 1 is de snelheidsliniaal in het diagram zelf. Met
+  **Vergelijk met een cirkel** dezelfde tekening voor gewone hellingen: daar
+  staat een min waar de ruimtetijd een plus heeft, en draai je door voorbij
+  loodrecht.
+- **Epstein-cirkel** (`epstein.js`) — twee delen. **De pijl**: de kwartcirkel
+  waarin ruimte en tijd samen altijd c opleveren. **De tweeling**: dezelfde
+  pijl tien jaar lang gevolgd, met plaats opzij en eigen tijd omhoog. Elk pad
+  is na t jaar precies t lang, dus iedereen ligt op dezelfde cirkel; het
+  geknikte pad van de reiziger eindigt teruggeklapt weer op die cirkel, en
+  thuis is het leeftijdsverschil een verschil in hoogte. De laag **Valkuil**
+  laat zien waar het beeld ophoudt: gelijke hoogte is gelijke klokstand, niet
+  hetzelfde moment, en een punt is hier geen gebeurtenis.
 
 ### Ideeën die nog openstaan
 
 Niet gekozen, alleen genoteerd:
 
-1. **Epstein volledig** — zijn centrale beeld helemaal uitspelen: één draaibare
-   pijl van vaste lengte, en de tweelingparadox nog eens in Epstein-coördinaten,
-   waar het verschil een booglengte wordt. Wel expliciet erbij zeggen waar het
-   beeld ophoudt te kloppen: Epstein-diagrammen geven eigen tijd goed en
-   gelijktijdigheid niet.
-2. **Snelheden tellen niet op, hoeken wel** — drie raketten van elk 0,6c, en
-   ernaast het diagram waarin elke stap dezelfde hyperbolische hoek toevoegt.
-   Dat verklaart meteen de ijk-hyperbolen uit Pro.
-3. **De plank over de put** en **de kever met de klinknagel** — mooi, maar de
-   oplossing hangt volledig op het vervormen van het voorwerp. Dan gaat het over
-   materiaalgedrag in plaats van relativiteit.
+1. **De plank over de put** en **de kever met de klinknagel** — de plank hangt
+   volledig op het doorbuigen van het voorwerp: dan gaat het over
+   materiaalgedrag in plaats van relativiteit. De kever kan wel zuiver, met
+   alleen de grens dat nieuws niet sneller gaat dan het licht (de punt van de
+   klinknagel weet nog niet dat de kop is gestuit), maar is dan het spiegelbeeld
+   van de laag Signaal in de staaf in de loods.
 
 ## Verwachtingen bij het werken
 
