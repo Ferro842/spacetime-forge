@@ -151,8 +151,8 @@ formule nodig is, hoort er een zichtbare tegenhanger bij.
 ## Modules
 
 De vijf modules van de oorspronkelijke bouwlijst zijn af; de staaf in de
-loods en het optellen van snelheden kwamen er later bij. Tien in totaal, in
-`index.html` verdeeld over drie groepen. Hieronder in diezelfde volgorde, met wat er in zit, zodat je niet
+loods, de kever met de klinknagel en het optellen van snelheden kwamen er
+later bij. Elf in totaal, in `index.html` verdeeld over drie groepen. Hieronder in diezelfde volgorde, met wat er in zit, zodat je niet
 elk bestand hoeft te openen.
 
 **Fundament**
@@ -204,6 +204,20 @@ elk bestand hoeft te openen.
   tot een factor zes bij hoge snelheid. Het bovenste toneel meldt dan zelf dat
   de staaf buiten beeld is; dat is geen fout maar het gevolg van twee sneden
   met een andere hoek.
+- **Kever en klinknagel** (`kever.js`) — een klinknagel die in rust te kort is
+  voor het gat, met een kever op de bodem. De muur ziet een gekrompen steel en
+  verwacht dat de kop eerst stuit; de nagel ziet een gekrompen gat en verwacht
+  dat de punt eerst beneden is. Opzet als de loods: de schuif zet de klok op de
+  punt, twee tonelen tonen elk hun eigen nu door dat moment, daaronder het
+  diagram in het kader van muur of nagel. De uitkomst volgt uit één ding: het
+  nieuws dat de kop gestuit is gaat hooguit met de lichtsnelheid door de steel,
+  en tot het aankomt vliegt de punt door. Hij komt daardoor minstens tot
+  L·√((1+β)/(1−β)), de steel maal de dopplerfactor; elk gat ondieper dan dat
+  is dodelijk. Tijd en lengte in millimeters.
+
+  Bewust buiten beeld: wat de nagel doet als het nieuws er eenmaal is. Dat is
+  materiaalgedrag. Het lichte, gestreepte deel van de steel is het deel dat
+  het nieuws al heeft; de module beweert daar niets over.
 - **Snelheden optellen** (`optellen.js`) — één tot vier raketten op elkaar, elk
   met dezelfde snelheid ten opzichte van de trap eronder. Bovenaan twee
   linialen: de hoek φ (rapiditeit), waar elke trap dezelfde stap zet, en de
@@ -227,12 +241,11 @@ elk bestand hoeft te openen.
 
 Niet gekozen, alleen genoteerd:
 
-1. **De plank over de put** en **de kever met de klinknagel** — de plank hangt
-   volledig op het doorbuigen van het voorwerp: dan gaat het over
-   materiaalgedrag in plaats van relativiteit. De kever kan wel zuiver, met
-   alleen de grens dat nieuws niet sneller gaat dan het licht (de punt van de
-   klinknagel weet nog niet dat de kop is gestuit), maar is dan het spiegelbeeld
-   van de laag Signaal in de staaf in de loods.
+1. **De plank over de put** — een plank die in het kader van het gat past en
+   valt, en in zijn eigen kader over een gekrompen gat schuift. De oplossing
+   hangt volledig op het doorbuigen van de plank: om het te tekenen moet je een
+   materiaalmodel kiezen, en dan gaat het over stijfheid in plaats van over
+   relativiteit. Daarom niet gebouwd.
 
 ## Verwachtingen bij het werken
 

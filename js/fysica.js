@@ -88,6 +88,15 @@ export function intervalSoort(t, x, tolerantie = 1e-9) {
   return 'lichtachtig';
 }
 
+/** Licht dat vertrekt op t = 0, x = 0 achter iets aan dat met beta wegvliegt
+ *  en op dat moment een voorsprong heeft: wanneer en waar haalt het licht het
+ *  in? Geeft {t, x}; c = 1. Bij een voorsprong L/gamma is x precies L maal de
+ *  dopplerfactor. */
+export function lichtHaaltIn(voorsprong, beta) {
+  const t = voorsprong / (1 - beta);
+  return { t: t, x: t };
+}
+
 /** Relativistische dopplerfactor. naderend = true geeft blauwverschuiving. */
 export function doppler(beta, naderend = true) {
   const g = gamma(beta); // valideert beta
