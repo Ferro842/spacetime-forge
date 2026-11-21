@@ -3,10 +3,11 @@
 // nieuwste versie zodra je online bent, maar werkt de app ook zonder net.
 // Het nummer hieronder hoort gelijk te zijn aan VERSIE in js/versie.js; de app
 // leest het hier af om te zien of er een nieuwere uitgave op het net staat.
-const CACHE = 'spacetime-forge-v19';
+const CACHE = 'spacetime-forge-v20';
 const BESTANDEN = [
   './',
   './index.html',
+  './zelftest.html',
   './css/thema.css',
   './js/register.js',
   './js/fysica.js',
@@ -15,6 +16,7 @@ const BESTANDEN = [
   './js/uitlegmodus.js',
   './js/geheugen.js',
   './js/versie.js',
+  './js/zelftest.js',
   './js/modules/welkom.js',
   './js/modules/lichtkegel.js',
   './js/modules/gelijktijdigheid.js',

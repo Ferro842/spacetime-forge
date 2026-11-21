@@ -45,6 +45,8 @@ js/tabbladen.js       verdeelt de zijkolom van elke module over tabbladen
 js/uitlegmodus.js     de app als uitlegbord: verhaal in stappen, met tekenlaag
 js/geheugen.js        onthoudt de stand per module en zet hem in het adres
 js/versie.js          het versienummer dat linksonder in het menu staat
+zelftest.html         de app controleert zichzelf, op het apparaat zelf
+js/zelftest.js        de controles: natuurkunde, bestanden, verhalen, geheugen
 js/modules/*.js       één bestand per module, exporteert render(doel)
 manifest.json, sw.js  PWA en offline-cache
 ```
@@ -58,6 +60,16 @@ cachelijst in `sw.js`.
 zijn. Het nummer staat linksonder in het menu. De app haalt `sw.js` vers van
 het net en toont een herlaadknop als daar een hoger nummer in staat dan in de
 code die draait; zo zie je op de iPad of een nieuwe uitgave al is aangekomen.
+
+**Zelftest:** `zelftest.html` (link linksonder in het menu) rekent op het
+apparaat zelf de natuurkunde na, kijkt of elke module in de offline-lijst
+staat en elk bestand bestaat, loopt elk verhaal door en zet elke stand uit een
+verhaal via het geheugen terug. Onderaan staan metingen van het apparaat
+(venster, opslag, deelvenster, service worker): dat is de plek om te kijken
+voordat je iets over Safari aanneemt. **Bij een nieuwe module hoort een
+controle van haar natuurkunde in `aanvullendeNatuurkunde()`**, in twee kaders
+uitgerekend waar dat kan. De leerroute in `welkom.js` moet het menu volgen;
+ook dat controleert de zelftest.
 
 ## Afspraken over de code
 
@@ -89,7 +101,8 @@ verdeelt ze daarna over tabbladen: Bediening, Getallen, Vragen of Afleiding,
 en Uitleg (de `.uitleg` en de `.bron`). De soort volgt uit de inhoud van een
 paneel: knoppen en schuiven is Bediening, `.formule` is Vragen (of Afleiding
 als de kop niet met "Vragen" begint), de rest is Getallen. Wil je het anders,
-zet dan `data-tab="..."` op het paneel. Wat samen in beeld past wordt
+zet dan `data-tab="..."` op het paneel (Welkom doet dat voor zijn tabblad
+Route). Wat samen in beeld past wordt
 samengevoegd, dus een lichte module heeft alleen Bediening en Uitleg. Een
 module regelt zelf geen tabbladen en klapt de uitleg niet zelf open of dicht.
 
@@ -105,7 +118,11 @@ stap begint bij de basis, dus een stap mag niet leunen op de vorige. De
 getallen in een tekst horen bij de stand van die stap: verander je de stand of
 de natuurkunde, reken de tekst dan na. Houd een tekst onder de 300 tekens, dan
 past hij zonder schuiven. Een knop waar een verhaal naar wijst mag je niet
-zomaar hernoemen of weghalen.
+zomaar hernoemen of weghalen. Aan het eind van een verhaal gaat Volgende door
+naar de volgende module in het menu, en aan het begin Vorige naar de laatste
+stap van de vorige: de volgorde van het menu is dus ook de volgorde van het
+grote verhaal. Bewaar als plaatje zet tekening en aantekeningen samen in een
+PNG; daarvoor worden de themakleuren in een kopie van de SVG ingevuld.
 
 **Geheugen en link:** de app onthoudt de laatste module, het gekozen tabblad
 en per module wat je aan knoppen en schuiven hebt veranderd (lokale opslag),
@@ -158,13 +175,12 @@ elk bestand hoeft te openen.
 **Fundament**
 
 - **Welkom** (`welkom.js`) — één wereldlijn, één schuif, de eerste kennismaking
-  met tijdsdilatatie en de nu-lijn.
+  met tijdsdilatatie en de nu-lijn. Ook de startpagina: de uitleg zegt hoe de
+  app werkt, en het tabblad Route is de leerroute langs de andere modules, in
+  de volgorde van het menu (`export const route`).
 
 **Ruimtetijd**
 
-- **Minkowski-diagram Pro** (`minkowski-pro.js`) — beide assenstelsels tegelijk,
-  perron/trein omkeerbaar, ijk-hyperbolen, pinch-zoom en pannen, klikbare
-  formules met stap-voor-stap afleidingen.
 - **Lichtklok-afleiding** (`lichtklok.js`) — vier tabbladen: Pythagoras naar Δt,
   de horizontale lichtklok naar L, de twee-rulers-figuur uit Einsteins boek, en
   de ijk-hyperbolen.
@@ -176,6 +192,9 @@ elk bestand hoeft te openen.
 - **Minkowski-diagram basis** (`minkowski.js`) — twee tot vier vrije objecten met
   eigen naam en snelheid, keuze van referentiekader, eigen-tijdstikken en een
   tabel met de snelheden in dat kader.
+- **Minkowski-diagram Pro** (`minkowski-pro.js`) — beide assenstelsels tegelijk,
+  perron/trein omkeerbaar, ijk-hyperbolen, pinch-zoom en pannen, klikbare
+  formules met stap-voor-stap afleidingen.
 - **Lichtkegel** (`lichtkegel.js`) — sleepbare gebeurtenis, interval en soort,
   plus de laag **Telegraaf**: een vraag sneller dan het licht heen en een
   antwoord dat ogenblikkelijk is in het kader van het relais, en dus vóór de

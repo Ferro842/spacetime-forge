@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#f4f6f9" />
+<link rel="stylesheet" href="css/thema.css" />
+<title>Zelftest — Spacetime Forge</title>
+<style>
+  /* Deze pagina mag schuiven: het is een lijst, geen werkblad */
+  html, body { height: auto; overflow: auto; }
+  body { padding: 24px 28px 48px; }
+  main { max-width: 980px; margin: 0 auto; }
+  h2 { margin: 0 0 4px; font-size: 24px; font-weight: 650; letter-spacing: -0.03em; }
+  .inleiding { margin: 0 0 16px; color: var(--tekst-zacht); font-size: 15px; max-width: 80ch; }
+  .balk { display: flex; gap: 10px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
+  #samenvatting { font-size: 17px; font-weight: 650; padding: 10px 14px; border-radius: var(--radius-klein);
+                  background: var(--kaart); border: 1px solid var(--rand); flex: 1; min-width: 280px; }
+  #samenvatting.goed { color: var(--eigentijd); }
+  #samenvatting.fout { color: var(--gebeurtenis); }
+  #uitslag { background: var(--kaart); border: 1px solid var(--rand); border-radius: var(--radius);
+             box-shadow: var(--schaduw); padding: 6px 18px 16px; }
+  #uitslag h3 { margin: 16px 0 6px; font-size: 13px; font-weight: 650; text-transform: uppercase;
+                letter-spacing: 0.06em; color: var(--tekst-zacht); }
+  .regel { display: flex; gap: 10px; padding: 5px 0; font-size: 15px; line-height: 1.45;
+           border-bottom: 1px solid var(--rand); overflow-wrap: anywhere; }
+  .regel:last-child { border-bottom: none; }
+  .regel .merk { flex: none; width: 18px; font-weight: 700; text-align: center; }
+  .regel.goed .merk { color: var(--eigentijd); }
+  .regel.fout { color: var(--gebeurtenis); font-weight: 600; }
+  .regel.weet .merk { color: var(--tekst-zacht); }
+  /* De modules worden buiten beeld getekend, op de maat van het werkblad */
+  #werkbank { position: absolute; left: -12000px; top: 0; width: 1500px; height: 900px; overflow: hidden; }
+  a.knop { text-decoration: none; display: inline-flex; align-items: center; }
+</style>
+</head>
+<body>
+<main>
+  <h2>Zelftest</h2>
+  <p class="inleiding">De app rekent hier haar eigen natuurkunde na, kijkt of alle bestanden er zijn,
+  en loopt elk verhaal en elke bewaarde stand door, op dit apparaat en in deze browser. Rood betekent
+  dat er iets niet klopt; geef dan door wat er staat.</p>
+  <div class="balk">
+    <div id="samenvatting">Bezig…</div>
+    <button class="knop" id="opnieuw">Opnieuw</button>
+    <a class="knop" href="index.html">Terug naar de app</a>
+  </div>
+  <div id="uitslag"></div>
+</main>
+<div id="werkbank"></div>
+<script type="module" src="js/zelftest.js"></script>
+</body>
+</html>

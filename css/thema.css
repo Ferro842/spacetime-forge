@@ -76,9 +76,15 @@ html, body {
 }
 /* Onderaan het menu: welke versie er draait, en zo nodig de knop om de
    nieuwere te laden. */
+#versie-vak { margin-top: auto; }
 #versie {
-  margin-top: auto; padding: 12px 18px 14px;
+  padding: 12px 18px 0;
   font-size: 12px; color: var(--tekst-zacht);
+}
+/* De zelftest: de app rekent zichzelf na, op dit apparaat */
+#zelftest-link {
+  display: flex; align-items: center; min-height: var(--raak);
+  padding: 0 18px; font-size: 13px; color: var(--blauw); text-decoration: none;
 }
 #nav #versie button {
   margin: 8px 0 0 -8px; width: calc(100% + 16px);
@@ -520,6 +526,7 @@ body.uitlegmodus #module > .zijkolom { display: none; }
   background: radial-gradient(circle closest-side,
     var(--k) 0 48%, var(--kaart) 51% 66%, var(--k) 69% 80%, transparent 83%);
 }
+.verhaal-bewaar { display: flex; justify-content: flex-end; margin-top: -6px; }
 .verhaal-nav { display: flex; gap: 10px; }
 .verhaal-nav .knop { flex: 1; min-height: 56px; font-size: 17px; }
 
@@ -530,3 +537,22 @@ body.uitlegmodus #module > .zijkolom { display: none; }
   pointer-events: none; touch-action: none;
 }
 .tekenlaag.actief { pointer-events: auto; cursor: crosshair; }
+
+
+/* ============ Leerroute (Welkom) ============ */
+.route { display: flex; flex-direction: column; gap: 2px; }
+.route h3 { margin-bottom: 6px; }
+.route-stap {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  min-height: var(--raak); padding: 5px 8px; text-align: left;
+  background: none; border: none; border-radius: var(--radius-klein);
+  font: inherit; color: var(--tekst); cursor: pointer;
+}
+.route-stap:active { background: var(--blauw-zacht); }
+.route-stap .nr {
+  flex: none; width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--blauw-zacht); color: var(--blauw); font-size: 13px; font-weight: 650;
+}
+.route-stap b { display: block; font-size: 14px; font-weight: 600; line-height: 1.25; }
+.route-stap small { display: block; font-size: 12.5px; color: var(--tekst-zacht); line-height: 1.3; }

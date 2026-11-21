@@ -6,5 +6,5 @@
 // dan draait er nog oude code en verschijnt de knop om te herladen. Vergeet je
 // dit bestand, dan blijft die knop dus staan; vergeet je sw.js, dan verschijnt
 // hij nooit.
-export const VERSIE = 19;
-export const DATUM = '20 november 2026';
+export const VERSIE = 20;
+export const DATUM = '21 november 2026';

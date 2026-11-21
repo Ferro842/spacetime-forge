@@ -3,7 +3,9 @@
 // Het menu en de zijkolom verdwijnen, de tekening krijgt de volle hoogte, en
 // ernaast staat één stap van een verhaal in grote letters. Met Vorige en
 // Volgende loop je erdoorheen; elke stap zet de module zelf in de goede stand.
-// Over de tekening ligt een tekenlaag voor vinger of pen.
+// Over de tekening ligt een tekenlaag voor vinger of pen; tekening en
+// aantekeningen samen zijn te bewaren als plaatje. Aan het eind van een
+// verhaal gaat Volgende door naar de volgende module.
 //
 // Een module levert zijn verhaal als gegevens, niet als code:
 //
@@ -175,11 +177,64 @@ function maakTekenlaag(vak) {
     wis: function () { halen = []; bezig = null; herteken(); },
     aantal: function () { return halen.length; },
     pasMaat: pasMaat,
+    doek: doek,
     weg: function () {
       window.removeEventListener('resize', pasMaat);
       if (doek.parentNode) doek.parentNode.removeChild(doek);
     },
   };
+}
+
+/**
+ * Maakt van de tekening en wat erbij getekend is één plaatje (PNG).
+ * De SVG gebruikt de kleuren van het thema via var(--...); los van de pagina
+ * bestaan die niet, dus ze worden eerst ingevuld.
+ */
+function maakPlaatje(vak, tekenDoek) {
+  return new Promise(function (klaar, mislukt) {
+    const svg = vak.querySelector('svg');
+    const vb = svg.viewBox.baseVal;
+    const maat = vak.getBoundingClientRect();
+    const stijl = getComputedStyle(document.documentElement);
+    const letter = getComputedStyle(document.body).fontFamily;
+    const vul = function (waarde) {
+      return waarde.replace(/var\((--[\w-]+)\)/g, function (_, naam) {
+        return stijl.getPropertyValue(naam).trim();
+      });
+    };
+    const kopie = svg.cloneNode(true);
+    kopie.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    kopie.setAttribute('width', vb.width);
+    kopie.setAttribute('height', vb.height);
+    kopie.removeAttribute('style');
+    [kopie].concat(Array.prototype.slice.call(kopie.querySelectorAll('*'))).forEach(function (e) {
+      Array.prototype.slice.call(e.attributes).forEach(function (a) {
+        if (a.value.indexOf('var(') >= 0) e.setAttribute(a.name, vul(a.value));
+      });
+      if (e.tagName.toLowerCase() === 'text') e.setAttribute('font-family', letter);
+    });
+    const beeld = new Image();
+    beeld.onload = function () {
+      const s = 2;
+      const doek = document.createElement('canvas');
+      doek.width = Math.round(maat.width * s);
+      doek.height = Math.round(maat.height * s);
+      const ctx = doek.getContext('2d');
+      ctx.fillStyle = stijl.getPropertyValue('--kaart').trim() || '#ffffff';
+      ctx.fillRect(0, 0, doek.width, doek.height);
+      // De tekening staat gecentreerd in het vak, zoals op het scherm
+      const schaal = Math.min(maat.width / vb.width, maat.height / vb.height);
+      const b = vb.width * schaal, h = vb.height * schaal;
+      ctx.drawImage(beeld, (maat.width - b) / 2 * s, (maat.height - h) / 2 * s, b * s, h * s);
+      ctx.drawImage(tekenDoek, 0, 0, doek.width, doek.height);
+      doek.toBlob(function (blob) {
+        if (blob) klaar(blob); else mislukt(new Error('geen plaatje'));
+      }, 'image/png');
+    };
+    beeld.onerror = function () { mislukt(new Error('de tekening is niet om te zetten')); };
+    beeld.src = 'data:image/svg+xml;charset=utf-8,' +
+      encodeURIComponent(new XMLSerializer().serializeToString(kopie));
+  });
 }
 
 const KLEUREN = ['var(--gebeurtenis)', 'var(--blauw)', 'var(--eigentijd)', 'var(--tekst)'];
@@ -188,11 +243,13 @@ const KLEUREN = ['var(--gebeurtenis)', 'var(--blauw)', 'var(--eigentijd)', 'var(
  * Start de uitlegmodus voor de module die nu in doel staat. Geeft een functie
  * terug waarmee je hem van buitenaf sluit.
  */
-export function startUitlegmodus(doel, verhaal, moduleNaam, opSluit) {
+export function startUitlegmodus(doel, verhaal, moduleNaam, opSluit, opties) {
   const vak = doel.querySelector('.diagram-vak');
   const stappen = (verhaal && verhaal.stappen) || [];
   const basis = (verhaal && verhaal.basis) || {};
-  let nr = 0;
+  // opties: { heeftVorige, heeftVolgende, opWissel(richting), beginBijEind }
+  const kan = opties || {};
+  let nr = kan.beginBijEind ? Math.max(0, stappen.length - 1) : 0;
 
   document.body.classList.add('uitlegmodus');
   const paneel = document.createElement('div');
@@ -208,6 +265,9 @@ export function startUitlegmodus(doel, verhaal, moduleNaam, opSluit) {
     '  <button class="knop" data-rol="teken">Tekenen</button>' +
     '  <div class="verhaal-kleuren"></div>' +
     '  <button class="knop" data-rol="wis">Wis</button>' +
+    '</div>' +
+    '<div class="verhaal-bewaar">' +
+    '  <button class="knop klein" data-rol="bewaar">Bewaar als plaatje</button>' +
     '</div>' +
     '<div class="verhaal-nav">' +
     '  <button class="knop" data-rol="vorige">\u2190 Vorige</button>' +
@@ -262,12 +322,20 @@ export function startUitlegmodus(doel, verhaal, moduleNaam, opSluit) {
       s.classList.toggle('aan', i === nr);
       s.classList.toggle('geweest', i < nr);
     });
-    el('vorige').disabled = nr === 0;
-    el('volgende').disabled = nr >= stappen.length - 1;
-    el('volgende').classList.toggle('aan', nr < stappen.length - 1);
+    // Aan het begin en het eind van een verhaal gaan de knoppen door naar de
+    // module ervoor of erna, als de schil dat aanbiedt.
+    const eerste = nr === 0, laatste = nr >= stappen.length - 1;
+    const naarVorige = eerste && kan.heeftVorige;
+    const naarVolgende = laatste && kan.heeftVolgende;
+    el('vorige').disabled = eerste && !naarVorige;
+    el('volgende').disabled = laatste && !naarVolgende;
+    el('vorige').textContent = naarVorige ? '\u2190 Vorige module' : '\u2190 Vorige';
+    el('volgende').textContent = naarVolgende ? 'Volgende module \u2192' : 'Volgende \u2192';
+    el('volgende').classList.toggle('aan', !laatste || !!naarVolgende);
   }
   function ga(naar) {
-    if (naar < 0 || naar >= stappen.length) return;
+    if (naar < 0) { if (kan.heeftVorige && kan.opWissel) kan.opWissel(-1); return; }
+    if (naar >= stappen.length) { if (kan.heeftVolgende && kan.opWissel) kan.opWissel(1); return; }
     nr = naar;
     toon();
   }
@@ -283,6 +351,44 @@ export function startUitlegmodus(doel, verhaal, moduleNaam, opSluit) {
     document.body.classList.remove('uitlegmodus');
     if (opSluit) opSluit();
   }
+
+  // Bewaren: eerst het deelvenster van het apparaat (daar kun je het plaatje
+  // in Foto's zetten of doorsturen), anders een gewone download.
+  let bewaarKlok = null;
+  function meldBewaar(tekst) {
+    el('bewaar').textContent = tekst;
+    clearTimeout(bewaarKlok);
+    bewaarKlok = setTimeout(function () {
+      if (paneel.parentNode) el('bewaar').textContent = 'Bewaar als plaatje';
+    }, 2000);
+  }
+  el('bewaar').addEventListener('click', function () {
+    const naam = 'spacetime-forge-' + moduleNaam.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png';
+    maakPlaatje(vak, laag.doek).then(function (blob) {
+      const download = function () {
+        const adres = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = adres;
+        a.download = naam;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(adres); }, 4000);
+        meldBewaar('Bewaard');
+      };
+      let bestand = null;
+      try { bestand = new File([blob], naam, { type: 'image/png' }); } catch (fout) { /* dan downloaden */ }
+      if (bestand && navigator.canShare && navigator.canShare({ files: [bestand] })) {
+        return navigator.share({ files: [bestand], title: moduleNaam }).then(function () {
+          meldBewaar('Gedeeld');
+        }, function (fout) {
+          if (fout && fout.name === 'AbortError') return;   // zelf weggetikt
+          download();
+        });
+      }
+      download();
+    }).catch(function () { meldBewaar('Lukt hier niet'); });
+  });
 
   el('vorige').addEventListener('click', function () { ga(nr - 1); });
   el('volgende').addEventListener('click', function () { ga(nr + 1); });

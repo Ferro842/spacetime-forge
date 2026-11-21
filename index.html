@@ -22,7 +22,10 @@
       <p>Speciale relativiteit, visueel</p>
     </div>
     <div id="nav-lijst"></div>
-    <div id="versie"></div>
+    <div id="versie-vak">
+      <div id="versie"></div>
+      <a id="zelftest-link" href="zelftest.html">Zelftest</a>
+    </div>
   </nav>
   <main id="inhoud">
     <header>
@@ -65,10 +68,10 @@ const GROEPEN = [
   {
     titel: 'Ruimtetijd',
     items: [
-      { id: 'minkowski-pro', naam: 'Minkowski-diagram Pro', pad: './js/modules/minkowski-pro.js' },
       { id: 'lichtklok',     naam: 'Lichtklok-afleiding',   pad: './js/modules/lichtklok.js' },
       { id: 'gelijktijdig',  naam: 'Gelijktijdigheid',      pad: './js/modules/gelijktijdigheid.js' },
       { id: 'minkowski',     naam: 'Minkowski-diagram',     pad: './js/modules/minkowski.js' },
+      { id: 'minkowski-pro', naam: 'Minkowski-diagram Pro', pad: './js/modules/minkowski-pro.js' },
       { id: 'lichtkegel',    naam: 'Lichtkegel',            pad: './js/modules/lichtkegel.js' },
     ],
   },
@@ -226,6 +229,12 @@ async function ga(id, { stand = null, nieuw = false, vers = false, uitAdres = fa
   }
 }
 
+// Een module kan vragen om een andere module te openen (de leerroute in Welkom)
+doel.addEventListener('ga-naar', (e) => {
+  const id = e.detail && e.detail.id;
+  if (bestaat(id)) ga(id, { nieuw: true });
+});
+
 // Het adres verandert van buitenaf: terug of vooruit in de browser, of een
 // link die in dit tabblad geplakt wordt. Onze eigen wijzigingen komen hier
 // niet langs.
@@ -236,11 +245,28 @@ window.addEventListener('hashchange', () => {
 });
 
 // --- Uitlegmodus -----------------------------------------------------------
-document.getElementById('uitleg-knop').addEventListener('click', () => {
+// Aan het eind van een verhaal gaat de uitlegmodus door naar de volgende
+// module in het menu, en aan het begin terug naar de vorige (daar bij de
+// laatste stap). Zo is de hele app één doorlopend verhaal.
+function openUitleg(bijEind) {
   if (!huidige || sluitUitleg || !doel.querySelector('.diagram-vak')) return;
+  const rij = moduleLijst().filter((m) => m.pad);
+  const plek = rij.findIndex((m) => m.id === huidige.id);
   sluitUitleg = startUitlegmodus(doel, huidige.verhaal, huidige.naam,
-    () => { sluitUitleg = null; });
-});
+    () => { sluitUitleg = null; },
+    {
+      heeftVorige: plek > 0,
+      heeftVolgende: plek >= 0 && plek < rij.length - 1,
+      beginBijEind: bijEind,
+      opWissel: async (richting) => {
+        const naar = rij[plek + richting];
+        if (!naar) return;
+        await ga(naar.id, { nieuw: true });
+        openUitleg(richting < 0);
+      },
+    });
+}
+document.getElementById('uitleg-knop').addEventListener('click', () => openUitleg(false));
 
 // --- Beginstand en delen ---------------------------------------------------
 document.getElementById('begin-knop').addEventListener('click', () => {

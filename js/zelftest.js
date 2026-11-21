@@ -1,0 +1,289 @@
+// zelftest.js — de app controleert zichzelf, op het apparaat waar ze draait.
+//
+// Vier soorten controles, in de volgorde waarin ze op het scherm komen:
+//
+//   1. Natuurkunde: de functies uit fysica.js tegen elkaar en tegen de
+//      Lorentz-transformatie. Wat in twee kaders hetzelfde moet zijn, wordt in
+//      twee kaders uitgerekend.
+//   2. Bestanden: staat elke module in de offline-lijst van sw.js, bestaat elk
+//      bestand uit die lijst, en zijn de twee versienummers gelijk.
+//   3. Verhalen: vindt elke stap van elk verhaal zijn knoppen en schuiven nog.
+//   4. Geheugen: komt elke stand uit een verhaal ongeschonden terug als hij
+//      bewaard en weer teruggezet wordt (zoals bij herladen of via een link).
+//
+// Daarnaast een blok met wat dit apparaat over zichzelf meldt. Dat zijn geen
+// controles maar metingen: handig om door te geven als iets zich hier anders
+// gedraagt dan verwacht.
+import * as F from './fysica.js';
+import { pasStapToe } from './uitlegmodus.js';
+import { leesStand, verschil, zetStand } from './geheugen.js';
+import { VERSIE, DATUM } from './versie.js';
+
+const lijst = document.getElementById('uitslag');
+const kop = document.getElementById('samenvatting');
+const werkbank = document.getElementById('werkbank');
+let goed = 0, fout = 0;
+
+function blok(titel) {
+  const h = document.createElement('h3');
+  h.textContent = titel;
+  lijst.appendChild(h);
+}
+function regel(ok, tekst, toelichting) {
+  const d = document.createElement('div');
+  d.className = 'regel ' + (ok === null ? 'weet' : ok ? 'goed' : 'fout');
+  const merk = document.createElement('span');
+  merk.className = 'merk';
+  merk.textContent = ok === null ? '\u00b7' : ok ? '\u2713' : '\u2717';
+  d.appendChild(merk);
+  const t = document.createElement('span');
+  t.textContent = tekst + (toelichting ? ' \u2014 ' + toelichting : '');
+  d.appendChild(t);
+  lijst.appendChild(d);
+  if (ok === true) goed++;
+  if (ok === false) fout++;
+}
+const bijna = function (a, b) { return Math.abs(a - b) < 1e-9 * (1 + Math.abs(a) + Math.abs(b)); };
+/** Even de browser aan het woord laten, zodat het scherm meeloopt. */
+const adem = function () { return new Promise(function (klaar) { setTimeout(klaar, 0); }); };
+
+// --- 1. Natuurkunde ------------------------------------------------------------
+function natuurkunde() {
+  blok('Natuurkunde');
+  const snelheden = [];
+  for (let b = -0.95; b < 0.951; b += 0.05) snelheden.push(Math.round(b * 100) / 100);
+
+  // Lorentz heen en terug, en het interval dat daarbij gelijk blijft
+  let n = 0, mis = 0;
+  snelheden.forEach(function (b) {
+    for (let t = -3; t <= 3; t += 1.5) for (let x = -3; x <= 3; x += 1.5) {
+      n++;
+      const q = F.lorentz(t, x, b), terug = F.lorentzTerug(q.t, q.x, b);
+      if (!bijna(terug.t, t) || !bijna(terug.x, x)) mis++;
+      if (!bijna(F.interval(q.t, q.x), F.interval(t, x))) mis++;
+    }
+  });
+  regel(mis === 0, 'Lorentz-transformatie heen en terug, interval blijft gelijk', n + ' gevallen');
+
+  // Snelheden optellen is hoeken optellen
+  n = 0; mis = 0;
+  for (let b = 0.05; b < 0.951; b += 0.05) {
+    let v = 0;
+    for (let j = 1; j <= 5; j++) {
+      v = F.snelheidOptellen(v, b); n++;
+      if (!bijna(v, F.snelheidBijRapiditeit(j * F.rapiditeit(b)))) mis++;
+      if (!bijna(F.naarKader(v, b), F.snelheidBijRapiditeit((j - 1) * F.rapiditeit(b)))) mis++;
+    }
+  }
+  regel(mis === 0, 'Snelheden optellen is hoeken optellen, vanuit elk kader', n + ' gevallen');
+
+  // Tweeling: wat je ziet telt op tot wat er is
+  n = 0; mis = 0;
+  for (let b = 0.1; b < 0.951; b += 0.05) {
+    n++;
+    const T = 5, g = F.gamma(b);
+    const heen = (T / g) * F.doppler(b, false), terug = (T / g) * F.doppler(b, true);
+    if (!bijna(heen + terug, 2 * T)) mis++;                       // de reiziger ziet de hele aardtijd
+    if (!bijna(F.doppler(b, true) * F.doppler(b, false), 1)) mis++;
+    if (!bijna(F.gelijktijdigOp(T, b * T, -b) - F.gelijktijdigOp(T, b * T, b), 2 * b * b * T)) mis++;  // de sprong
+  }
+  regel(mis === 0, 'Tweeling: gezien op de heenweg plus terugweg is de hele aardtijd; de sprong is 2\u00b7\u03b2\u00b2\u00b7T', n + ' snelheden');
+
+  // Staaf in de loods: tegelijk in de loods is gamma*beta*D uit elkaar voor de staaf
+  n = 0; mis = 0;
+  for (let b = 0.3; b < 0.951; b += 0.05) for (let D = 3; D <= 12; D += 3) {
+    n++;
+    const a = F.lorentz(7, 0, b), c = F.lorentz(7, D, b);
+    if (!bijna(a.t - c.t, F.gamma(b) * b * D)) mis++;
+    if (!bijna(F.lengtecontractie(10, b), 10 / F.gamma(b))) mis++;
+  }
+  regel(mis === 0, 'Loods: twee sluitingen tegelijk liggen voor de staaf \u03b3\u00b7\u03b2\u00b7D uit elkaar', n + ' gevallen');
+
+  // Kever: in beide kaders dezelfde uitkomst, en de reikwijdte is L maal de dopplerfactor
+  n = 0; mis = 0;
+  for (let b = 0.3; b < 0.951; b += 0.05) for (let L = 6; L <= 14; L += 2) for (let D = 8; D <= 40; D += 4) {
+    n++;
+    const g = F.gamma(b), tP = (D - L / g) / b, S = F.lichtHaaltIn(L / g, b);
+    const Pn = F.lorentz(tP, D, b), Sn = F.lorentz(S.t, S.x, b);
+    if (!bijna(S.x, L * F.doppler(b, true)) || !bijna(Pn.x, L) || !bijna(Sn.x, L) || !bijna(Sn.t, L)) mis++;
+    if (Math.abs(D - S.x) > 1e-9 && ((tP < S.t) !== (Pn.t < Sn.t))) mis++;
+  }
+  regel(mis === 0, 'Kever: geplet of niet is in beide kaders hetzelfde; reikwijdte is steel maal dopplerfactor', n + ' gevallen');
+
+  // Epstein: elk pad is na t jaar t lang, ook het geknikte
+  n = 0; mis = 0;
+  for (let b = 0.05; b < 0.991; b += 0.05) for (let t = 0; t <= 10; t += 0.5) {
+    n++;
+    const g = F.gamma(b), T = 5;
+    const x = t <= T ? b * t : b * (2 * T - t), tau = t / g;
+    const len = t <= T ? Math.hypot(x, tau) : Math.hypot(b * T, T / g) + Math.hypot(b * T - x, tau - T / g);
+    if (!bijna(len, t) || !bijna(Math.hypot(b * t, tau), t)) mis++;
+  }
+  regel(mis === 0, 'Epstein: elk pad is na t jaar precies t lang', n + ' gevallen');
+
+  // Telegraaf: het antwoord komt aan op t - beta*x
+  n = 0; mis = 0;
+  for (let b = -0.9; b < 0.901; b += 0.1) for (let x = 0.5; x <= 2.5; x += 0.5) for (let t = 0.2; t <= 1; t += 0.2) {
+    n++;
+    if (!bijna(F.gelijktijdigOp(t, x, b), t - b * x)) mis++;
+    const hier = F.lorentz(F.gelijktijdigOp(t, x, b), 0, b), daar = F.lorentz(t, x, b);
+    if (!bijna(hier.t, daar.t)) mis++;
+  }
+  regel(mis === 0, 'Telegraaf: het antwoord is voor het relais gelijktijdig met de vraag', n + ' gevallen');
+  aanvullendeNatuurkunde();
+}
+
+// Controles voor modules die later zijn toegevoegd komen hier bij
+function aanvullendeNatuurkunde() {
+}
+
+// --- 2. Bestanden --------------------------------------------------------------
+let modules = [];
+async function bestanden() {
+  blok('Bestanden en versie');
+  let index = '', sw = '';
+  try {
+    index = await (await fetch('index.html', { cache: 'no-store' })).text();
+    sw = await (await fetch('sw.js', { cache: 'no-store' })).text();
+  } catch (e) {
+    regel(null, 'Geen verbinding: de bestanden zijn niet vers op te halen', 'de rest van de zelftest gebruikt wat er in de offline-opslag zit');
+    try {
+      index = await (await fetch('index.html')).text();
+      sw = await (await fetch('sw.js')).text();
+    } catch (e2) { /* dan zonder */ }
+  }
+  const zoek = /\{\s*id:\s*'([^']+)',\s*naam:\s*'([^']+)',\s*pad:\s*'([^']+)'/g;
+  let m;
+  while ((m = zoek.exec(index)) !== null) modules.push({ id: m[1], naam: m[2], pad: m[3] });
+  regel(modules.length > 0, 'Modules gevonden in index.html', String(modules.length));
+
+  const inLijst = (sw.match(/'\.\/[^']*'/g) || []).map(function (s) { return s.slice(1, -1); });
+  const ontbreekt = modules.filter(function (mod) { return inLijst.indexOf(mod.pad) < 0; });
+  regel(ontbreekt.length === 0, 'Elke module staat in de offline-lijst van sw.js',
+    ontbreekt.map(function (mod) { return mod.pad; }).join(', '));
+
+  const nummer = /spacetime-forge-v(\d+)/.exec(sw);
+  regel(!!nummer && Number(nummer[1]) === VERSIE, 'Versienummer in sw.js gelijk aan js/versie.js',
+    'sw.js ' + (nummer ? nummer[1] : '?') + ', versie.js ' + VERSIE + ' (' + DATUM + ')');
+
+  let weg = [];
+  for (let i = 0; i < inLijst.length; i++) {
+    if (inLijst[i] === './') continue;
+    try {
+      const antwoord = await fetch(inLijst[i], { cache: 'no-store' });
+      if (!antwoord.ok) weg.push(inLijst[i]);
+    } catch (e) { weg.push(inLijst[i] + ' (niet bereikbaar)'); }
+  }
+  regel(weg.length === 0, 'Elk bestand uit de offline-lijst bestaat', inLijst.length - 1 + ' bestanden' + (weg.length ? ', ontbreekt: ' + weg.join(', ') : ''));
+}
+
+// --- 3 en 4. Verhalen en geheugen ------------------------------------------------
+function tekenVers(mod) {
+  werkbank.innerHTML = '';
+  mod.render(werkbank);
+}
+async function verhalenEnGeheugen() {
+  blok('Verhalen en geheugen');
+  for (let i = 0; i < modules.length; i++) {
+    const wie = modules[i];
+    let mod;
+    try {
+      // Het pad is opgegeven vanaf de pagina, niet vanaf dit bestand
+      mod = await import(new URL(wie.pad, document.baseURI).href);
+    } catch (e) {
+      regel(false, wie.naam + ': module laadt niet', String(e && e.message ? e.message : e));
+      continue;
+    }
+    if (!mod.verhaal || !mod.verhaal.stappen || !mod.verhaal.stappen.length) {
+      regel(false, wie.naam + ': geen verhaal voor de uitlegmodus');
+      continue;
+    }
+    if (mod.route) {
+      const menu = modules.filter(function (x) { return x.id !== wie.id; }).map(function (x) { return x.id; });
+      const inRoute = mod.route.map(function (r) { return r.id; });
+      regel(menu.join(' ') === inRoute.join(' '), wie.naam + ': de leerroute volgt het menu',
+        menu.join(' ') === inRoute.join(' ') ? inRoute.length + ' modules'
+                                             : 'menu: ' + menu.join(', ') + ' \u00b7 route: ' + inRoute.join(', '));
+    }
+    const stappen = mod.verhaal.stappen;
+    const gemist = [], scheef = [];
+    let kapot = null;
+    for (let s = 0; s < stappen.length && !kapot; s++) {
+      try {
+        tekenVers(mod);
+        const begin = leesStand(werkbank);
+        const mist = pasStapToe(werkbank, mod.verhaal.basis, stappen[s]);
+        if (mist.length) gemist.push('stap ' + (s + 1) + ': ' + mist.join(', '));
+        const nu = leesStand(werkbank);
+        const bewaard = verschil(begin, nu);
+        tekenVers(mod);
+        zetStand(werkbank, bewaard);
+        const terug = leesStand(werkbank);
+        const anders = Object.keys(nu).filter(function (k) { return nu[k] !== terug[k]; });
+        if (anders.length) scheef.push('stap ' + (s + 1) + ': ' + anders.join(', '));
+      } catch (e) {
+        kapot = 'stap ' + (s + 1) + ': ' + String(e && e.message ? e.message : e);
+      }
+    }
+    werkbank.innerHTML = '';
+    if (kapot) { regel(false, wie.naam + ': fout bij het tekenen', kapot); continue; }
+    regel(gemist.length === 0, wie.naam + ': elke stap vindt zijn knoppen',
+      gemist.length ? gemist.join(' \u00b7 ') : stappen.length + ' stappen');
+    regel(scheef.length === 0, wie.naam + ': elke stand komt uit het geheugen terug',
+      scheef.join(' \u00b7 '));
+    await adem();
+  }
+}
+
+// --- Dit apparaat ----------------------------------------------------------------
+function apparaat() {
+  blok('Dit apparaat (metingen, geen controles)');
+  const meld = function (naam, waarde) { regel(null, naam + ': ' + waarde); };
+  meld('Venster', window.innerWidth + ' \u00d7 ' + window.innerHeight + ', devicePixelRatio ' + window.devicePixelRatio);
+  let staand = false;
+  try { staand = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) { /* onbekend */ }
+  meld('Gestart vanaf het beginscherm', staand ? 'ja' : 'nee');
+  let opslag = 'nee';
+  try {
+    localStorage.setItem('spacetime-forge-proef', '1');
+    opslag = localStorage.getItem('spacetime-forge-proef') === '1' ? 'ja' : 'nee';
+    localStorage.removeItem('spacetime-forge-proef');
+  } catch (e) { opslag = 'nee (' + (e && e.name ? e.name : 'geweigerd') + ')'; }
+  meld('Lokale opslag werkt', opslag);
+  let bewaard = 'niets';
+  try {
+    const ruw = JSON.parse(localStorage.getItem('spacetime-forge') || 'null');
+    if (ruw) bewaard = 'laatste module ' + ruw.module + ', stand van ' + Object.keys(ruw.standen || {}).length + ' modules';
+  } catch (e) { bewaard = 'niet te lezen'; }
+  meld('Wat de app hier onthouden heeft', bewaard);
+  meld('Deelvenster (navigator.share)', typeof navigator.share === 'function' ? 'aanwezig' : 'afwezig');
+  meld('Klembord (navigator.clipboard)', navigator.clipboard && typeof navigator.clipboard.writeText === 'function' ? 'aanwezig' : 'afwezig');
+  meld('Aanwijzer-events (pen en vinger)', typeof window.PointerEvent === 'function' ? 'aanwezig' : 'afwezig');
+  meld('Aanraakpunten', String(navigator.maxTouchPoints || 0));
+  const sw = navigator.serviceWorker;
+  meld('Service worker', !sw ? 'niet beschikbaar' : sw.controller ? 'actief op deze pagina' : 'beschikbaar, nog niet actief');
+  meld('Browser meldt zich als', navigator.userAgent);
+}
+
+async function draai() {
+  goed = 0; fout = 0; modules = [];
+  lijst.innerHTML = '';
+  kop.textContent = 'Bezig\u2026';
+  kop.className = '';
+  try {
+    natuurkunde();
+    await adem();
+    await bestanden();
+    await verhalenEnGeheugen();
+  } catch (e) {
+    regel(false, 'De zelftest zelf liep vast', String(e && e.message ? e.message : e));
+  }
+  apparaat();
+  kop.textContent = fout === 0
+    ? 'Alles in orde: ' + goed + ' controles, versie ' + VERSIE
+    : fout + ' van de ' + (goed + fout) + ' controles mislukt, versie ' + VERSIE;
+  kop.className = fout === 0 ? 'goed' : 'fout';
+}
+
+document.getElementById('opnieuw').addEventListener('click', draai);
+draai();

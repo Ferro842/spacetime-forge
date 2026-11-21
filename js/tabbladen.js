@@ -10,7 +10,7 @@
 // Wat samen in beeld past blijft samen. Tabbladen zijn er om scrollen te
 // voorkomen, niet om dingen te verstoppen die er gewoon naast kunnen staan.
 
-const VOLGORDE = ['Bediening', 'Getallen', 'Vragen', 'Afleiding', 'Uitleg'];
+const VOLGORDE = ['Bediening', 'Route', 'Getallen', 'Vragen', 'Afleiding', 'Uitleg'];
 const TUSSENRUIMTE = 10;   // gelijk aan de gap van de kolom in thema.css
 const BALKHOOGTE = 64;     // de tabbalk zelf, met zijn rand en de ruimte eronder
 

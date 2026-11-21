@@ -5,8 +5,24 @@ import * as T from '../teken.js';
 
 export const titel = 'Spacetime Forge';
 export const onderschrift =
-  'Een werkbank voor de speciale relativiteitstheorie. Gebouwd voor één scherm, ' +
-  'zodat elk diagram precies past en niets overlapt.';
+  'Speciale relativiteit om naar te kijken. Speel hier met \u00e9\u00e9n trein, en volg ' +
+  'daarna de leerroute langs de andere modules. Die staat rechts.';
+
+// De leerroute: de modules in de volgorde waarin ze op elkaar bouwen, met in
+// een paar woorden wat je er leert. Dezelfde volgorde als het menu. De
+// zelftest controleert dat elke module hier voorkomt en andersom.
+export const route = [
+  { id: 'lichtklok', naam: 'Lichtklok-afleiding', leert: 'waarom een bewegende klok trager tikt' },
+  { id: 'gelijktijdig', naam: 'Gelijktijdigheid', leert: 'tegelijk is niet voor iedereen tegelijk' },
+  { id: 'minkowski', naam: 'Minkowski-diagram', leert: 'levenslopen op \u00e9\u00e9n kaart' },
+  { id: 'minkowski-pro', naam: 'Minkowski-diagram Pro', leert: 'de maatlat van de ruimtetijd' },
+  { id: 'lichtkegel', naam: 'Lichtkegel', leert: 'oorzaak, gevolg en de lichtsnelheid' },
+  { id: 'tweeling', naam: 'Tweelingparadox', leert: 'wie is er jonger, en waarom' },
+  { id: 'loods', naam: 'Staaf in de loods', leert: 'te lang, en toch past hij' },
+  { id: 'kever', naam: 'Kever en klinknagel', leert: 'nieuws gaat niet sneller dan licht' },
+  { id: 'optellen', naam: 'Snelheden optellen', leert: 'waarom 0,6 plus 0,6 geen 1,2 is' },
+  { id: 'epstein', naam: 'Epstein-cirkel', leert: 'altijd even snel door ruimte en tijd' },
+];
 
 // Het verhaal voor de uitlegmodus (js/uitlegmodus.js): de stappen in volgorde,
 // met per stap de stand van knoppen en schuiven. De getallen in de tekst horen
@@ -75,12 +91,20 @@ export function render(doel) {
   const uitleg = document.createElement('details');
   uitleg.className = 'uitleg';
   uitleg.innerHTML =
-    '<summary>Het fundament staat</summary>' +
-    '<p>Dit diagram gebruikt de bouwstenen van alle komende modules: één ' +
-    'schaalobject dat natuurkundige co\u00f6rdinaten omzet naar het scherm, en een ' +
-    'labelplaatser die botsende teksten opschuift, om assen heen leidt, of ' +
-    'weglaat als het te druk wordt. Sleep aan de snelheid: de trein-assen ' +
-    'kantelen naar elkaar toe, het licht blijft onder 45\u00b0 staan.</p>';
+    '<summary>Zo lees je dit diagram</summary>' +
+    '<p>Naar rechts is plaats, omhoog is tijd. Wie stilstaat op het perron gaat ' +
+    'recht omhoog; een trein die rijdt volgt de schuine lijn <b>ct\u2032</b>. De ' +
+    'gestreepte lijnen onder 45\u00b0 zijn licht. Schuif aan de snelheid: de twee ' +
+    'assen van de trein kantelen naar elkaar toe, en het licht blijft staan ' +
+    'waar het stond. De stippen laten zien hoeveel tijd er in de trein ' +
+    'verstreken is.</p>' +
+    '<p style="margin-top:7px"><b>Zo werkt de app.</b> Rechts staan tabbladen: ' +
+    'bediening, getallen, vragen en uitleg. In veel tekeningen kun je slepen. ' +
+    'Met <b>Uitlegmodus</b> rechtsboven loopt de app in stappen door een ' +
+    'verhaal, handig om het aan iemand te laten zien; je kunt er dan ook bij ' +
+    'tekenen. <b>Deel link</b> maakt een link naar precies dit beeld, en ' +
+    '<b>Beginstand</b> zet een module terug zoals ze begon. Linksonder staat ' +
+    'de versie.</p>';
   doel.appendChild(uitleg);
 
   const vak = document.createElement('div');
@@ -117,6 +141,34 @@ export function render(doel) {
   const waarden = document.createElement('div');
   waarden.className = 'waarden';
   zijkolom.appendChild(waarden);
+
+  // De route: een eigen tabblad, want de lijst vult de kolom. Een tik stuurt
+  // een bericht naar de schil, die de module laadt in de stand van de vorige keer.
+  const routePaneel = document.createElement('div');
+  routePaneel.className = 'paneel route';
+  routePaneel.setAttribute('data-tab', 'Route');
+  routePaneel.innerHTML = '<h3>Leerroute</h3>';
+  route.forEach(function (stap, i) {
+    const knop = document.createElement('button');
+    knop.className = 'route-stap';
+    const nr = document.createElement('span');
+    nr.className = 'nr';
+    nr.textContent = String(i + 1);
+    const tekst = document.createElement('span');
+    const naam = document.createElement('b');
+    naam.textContent = stap.naam;
+    const leert = document.createElement('small');
+    leert.textContent = stap.leert;
+    tekst.appendChild(naam);
+    tekst.appendChild(leert);
+    knop.appendChild(nr);
+    knop.appendChild(tekst);
+    knop.addEventListener('click', function () {
+      knop.dispatchEvent(new CustomEvent('ga-naar', { bubbles: true, detail: { id: stap.id } }));
+    });
+    routePaneel.appendChild(knop);
+  });
+  zijkolom.appendChild(routePaneel);
 
   const bron = document.createElement('div');
   bron.className = 'bron';
