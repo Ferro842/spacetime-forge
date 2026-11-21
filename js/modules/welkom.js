@@ -19,6 +19,7 @@ export const route = [
   { id: 'minkowski-pro', naam: 'Minkowski-diagram Pro', leert: 'de maatlat van de ruimtetijd' },
   { id: 'lichtkegel', naam: 'Lichtkegel', leert: 'oorzaak, gevolg en de lichtsnelheid' },
   { id: 'tweeling', naam: 'Tweelingparadox', leert: 'wie is er jonger, en waarom' },
+  { id: 'zien', naam: 'Zien en meten', leert: 'wat je ziet is niet wat er is' },
   { id: 'loods', naam: 'Staaf in de loods', leert: 'te lang, en toch past hij' },
   { id: 'kever', naam: 'Kever en klinknagel', leert: 'nieuws gaat niet sneller dan licht' },
   { id: 'optellen', naam: 'Snelheden optellen', leert: 'waarom 0,6 plus 0,6 geen 1,2 is' },

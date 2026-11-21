@@ -132,6 +132,18 @@ export function hyperbolischeBeweging(a, tau) {
   };
 }
 
+/** Waar zie je iets dat langs een rechte lijn voorbijvliegt? Het voorwerp is
+ *  nu op plaats xNu langs die lijn (gemeten vanaf het punt recht voor je) en
+ *  beweegt met beta; de lijn ligt op een afstand van je oog. Het licht dat je
+ *  nu opvangt vertrok eerder, toen het voorwerp ergens anders was. Geeft die
+ *  plaats en hoe lang het licht onderweg was. c = 1. */
+export function gezienePlaats(xNu, afstand, beta) {
+  // Onderweg-tijd T voldoet aan T^2 = (xNu - beta*T)^2 + afstand^2
+  const a = 1 - beta * beta;
+  const T = (-beta * xNu + Math.sqrt(beta * beta * xNu * xNu + a * (xNu * xNu + afstand * afstand))) / a;
+  return { x: xNu - beta * T, vertraging: T };
+}
+
 /** Lichtsnelheid in kilometers per microseconde, voor de muonen. */
 export const C_KM_PER_US = C_MS / 1e9;
 

@@ -167,9 +167,8 @@ formule nodig is, hoort er een zichtbare tegenhanger bij.
 
 ## Modules
 
-De vijf modules van de oorspronkelijke bouwlijst zijn af; de staaf in de
-loods, de kever met de klinknagel en het optellen van snelheden kwamen er
-later bij. Elf in totaal, in `index.html` verdeeld over drie groepen. Hieronder in diezelfde volgorde, met wat er in zit, zodat je niet
+De vijf modules van de oorspronkelijke bouwlijst zijn af; de rest kwam er
+later bij. Vijftien in totaal, in `index.html` verdeeld over drie groepen. Hieronder in diezelfde volgorde, met wat er in zit, zodat je niet
 elk bestand hoeft te openen.
 
 **Fundament**
@@ -213,6 +212,20 @@ elk bestand hoeft te openen.
   lichtsignalen zelf (lagen *Aarde seint* en *Schip seint*): wat je zíet springt
   nergens, en telt toch op tot dezelfde eindstand. Daar zit ook de asymmetrie:
   de aarde ziet de omkeer pas op t = T(1+β).
+- **Zien en meten** (`zien.js`) — wat je ziet is niet wat er is. Een staaf of
+  een kubus vliegt langs een oog. Boven een bovenaanzicht: bruin is waar het
+  voorwerp nu is (gemeten, dus gekrompen), paars is waar je het ziet, want het
+  licht dat nu aankomt vertrok van elk stukje op een ander moment. Onder de
+  foto: wat het oog opvangt, met evenveel pixels per graad opzij als omhoog.
+  Een staaf die aankomt lijkt uitgerekt (tot de dopplerfactor), een staaf die
+  wegvliegt extra kort, en een kubus laat zijn achterkant zien: van ver is het
+  zijvlak 1/γ breed en het achtervlak β, precies een kubus die over de hoek met
+  sinus β gedraaid is (Terrell, Penrose). Lengtes in zijden van de kubus; het
+  oog staat op 3 van de baan.
+
+  Let op: bij hoge snelheid staat het beeld lang links buiten het venster
+  terwijl het voorwerp zelf al in beeld is. De module meldt dat zelf; de knop
+  Begin zet het voorwerp op de plek waar het beeld net in beeld komt.
 - **Staaf in de loods** (`loods.js`) — de ladderparadox. Bovenaan staan
   **beide tonelen op hetzelfde moment**: de schuif zet één klok, die op de punt
   van de staaf, en elk kader legt daar zijn eigen nu doorheen (loods op

@@ -135,6 +135,30 @@ function natuurkunde() {
 
 // Controles voor modules die later zijn toegevoegd komen hier bij
 function aanvullendeNatuurkunde() {
+  // Zien en meten: het licht dat nu aankomt vertrok toen het voorwerp daar was
+  let nz = 0, mz = 0;
+  for (let b = 0; b < 0.96; b += 0.05) for (let x = -6; x <= 9; x += 1.5) for (let d = 1; d <= 5; d += 2) {
+    nz++;
+    const q = F.gezienePlaats(x, d, b);
+    if (!bijna(q.vertraging, Math.hypot(q.x, d))) mz++;                          // zo lang is het licht onderweg
+    if (!bijna(q.x + b * q.vertraging, x)) mz++;                                  // en zo ver vloog het voorwerp door
+  }
+  for (let b = 0.1; b < 0.96; b += 0.1) {
+    nz++;
+    const g = F.gamma(b), ver = 1e6, lang = 2 / g;
+    // van heel ver recht op je af: de staaf maal de dopplerfactor; van je weg: gedeeld erdoor
+    const komt = F.gezienePlaats(-ver + lang / 2, 3, b).x - F.gezienePlaats(-ver - lang / 2, 3, b).x;
+    const gaat = F.gezienePlaats(ver + lang / 2, 3, b).x - F.gezienePlaats(ver - lang / 2, 3, b).x;
+    if (Math.abs(komt - 2 * Math.sqrt((1 + b) / (1 - b))) > 1e-4) mz++;
+    if (Math.abs(gaat - 2 * Math.sqrt((1 - b) / (1 + b))) > 1e-4) mz++;
+    // een kubus ver weg, recht voor je: zijvlak 1/gamma, achtervlak beta, samen een draaiing
+    const xa = b * ver - 0.5 / g, xv = b * ver + 0.5 / g;
+    const zij = F.gezienePlaats(xv, ver, b).x - F.gezienePlaats(xa, ver, b).x;
+    const achter = F.gezienePlaats(xa, ver, b).x - F.gezienePlaats(xa, ver + 1, b).x;
+    if (Math.abs(zij - 1 / g) > 1e-4 || Math.abs(achter - b) > 1e-4) mz++;
+    if (Math.abs(zij * zij + achter * achter - 1) > 1e-3) mz++;
+  }
+  regel(mz === 0, 'Zien en meten: lichtvertraging klopt, van ver de dopplerfactor, en een kubus draait over de hoek met sinus \u03b2', nz + ' gevallen');
   // Versnellen: hyperbool om een vast punt, en een horizon
   let nv = 0, mv = 0;
   for (let a = 0.2; a <= 2.01; a += 0.3) for (let tau = 0.1; tau * a <= 2.9; tau += 0.3) {
