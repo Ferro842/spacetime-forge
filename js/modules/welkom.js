@@ -22,6 +22,7 @@ export const route = [
   { id: 'loods', naam: 'Staaf in de loods', leert: 'te lang, en toch past hij' },
   { id: 'kever', naam: 'Kever en klinknagel', leert: 'nieuws gaat niet sneller dan licht' },
   { id: 'optellen', naam: 'Snelheden optellen', leert: 'waarom 0,6 plus 0,6 geen 1,2 is' },
+  { id: 'energie', naam: 'Energie en impuls', leert: 'massa is energie' },
   { id: 'epstein', naam: 'Epstein-cirkel', leert: 'altijd even snel door ruimte en tijd' },
 ];
 

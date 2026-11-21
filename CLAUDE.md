@@ -253,6 +253,15 @@ elk bestand hoeft te openen.
   **Vergelijk met een cirkel** dezelfde tekening voor gewone hellingen: daar
   staat een min waar de ruimtetijd een plus heeft, en draai je door voorbij
   loodrecht.
+- **Energie en impuls** (`energie.js`) — een deeltje als pijl: energie omhoog,
+  impuls opzij, in eenheden van zijn massa. De punt schuift langs de
+  hyperbool E² − p² = m², dezelfde soort kromme als de ijk-hyperbool; stilstaan
+  is de massa zelf (E = mc²), en een streepje naast de as wijst aan wat Newton
+  voor de bewegingsenergie zou geven. Deel 2 is een botsing waarbij twee
+  deeltjes aan elkaar blijven zitten: de pijlen tellen op, kop aan staart, en
+  de som ligt op een hogere kromme. De klomp is zwaarder dan de delen. Met een
+  schuif kijk je vanuit een ander kader (de massa blijft), en met **Doelwit
+  staat stil** zie je waarom versnellers twee bundels op elkaar schieten.
 - **Epstein-cirkel** (`epstein.js`) — twee delen. **De pijl**: de kwartcirkel
   waarin ruimte en tijd samen altijd c opleveren. **De tweeling**: dezelfde
   pijl tien jaar lang gevolgd, met plaats opzij en eigen tijd omhoog. Elk pad

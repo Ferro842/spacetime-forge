@@ -135,6 +135,22 @@ function natuurkunde() {
 
 // Controles voor modules die later zijn toegevoegd komen hier bij
 function aanvullendeNatuurkunde() {
+  // Energie en impuls: de massa is in elk kader dezelfde, ook die van een som
+  let ne = 0, me = 0;
+  for (let b = 0; b < 0.91; b += 0.1) for (let k = -0.6; k < 0.61; k += 0.2) {
+    ne++;
+    const g = b > 0 ? F.gamma(b) : 1;
+    const a = { E: F.energie(1, b), p: F.impuls(1, b) };
+    if (!bijna(F.invarianteMassa(a.E, a.p), 1)) me++;
+    if (b < 0.11 && Math.abs((a.E - 1) - 0.5 * b * b) > b * b * b * b) me++;       // Newton bij lage snelheid
+    const som = function (tegen) {
+      const q1 = F.lorentz(a.E, a.p, k), q2 = F.lorentz(tegen.E, tegen.p, k);
+      return F.invarianteMassa(q1.t + q2.t, q1.x + q2.x);
+    };
+    if (!bijna(som({ E: F.energie(1, -b), p: F.impuls(1, -b) }), 2 * g)) me++;     // frontaal
+    if (!bijna(som({ E: 1, p: 0 }), Math.sqrt(2 * (1 + g)))) me++;                 // stilstaand doel
+  }
+  regel(me === 0, 'Energie en impuls: massa is in elk kader gelijk; frontaal 2\u03b3, op een doel \u221a(2+2\u03b3)', ne + ' gevallen');
   // Muonen: de eigen tijd van de val is in beide verhalen dezelfde
   let n = 0, mis = 0;
   for (let g = 1.5; g <= 40; g += 2.5) for (let H = 1; H <= 20; H += 3) {

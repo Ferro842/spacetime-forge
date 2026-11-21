@@ -97,6 +97,23 @@ export function lichtHaaltIn(voorsprong, beta) {
   return { t: t, x: t };
 }
 
+/** Energie van een deeltje met massa m en snelheid beta (c = 1): gamma maal
+ *  de massa. Bij stilstand is dat de massa zelf. */
+export function energie(m, beta) {
+  return m * gamma(beta);
+}
+
+/** Impuls van een deeltje met massa m en snelheid beta (c = 1). */
+export function impuls(m, beta) {
+  return m * gamma(beta) * beta;
+}
+
+/** De massa die bij een energie en een impuls hoort: wat in elk kader gelijk
+ *  is. Voor een stel deeltjes samen: de massa van het geheel. */
+export function invarianteMassa(E, p) {
+  return Math.sqrt(Math.max(0, E * E - p * p));
+}
+
 /** Lichtsnelheid in kilometers per microseconde, voor de muonen. */
 export const C_KM_PER_US = C_MS / 1e9;
 
