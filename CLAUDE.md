@@ -262,6 +262,14 @@ elk bestand hoeft te openen.
   de som ligt op een hogere kromme. De klomp is zwaarder dan de delen. Met een
   schuif kijk je vanuit een ander kader (de massa blijft), en met **Doelwit
   staat stil** zie je waarom versnellers twee bundels op elkaar schieten.
+- **Versnellen** (`versnellen.js`) — een raket met constante versnelling aan
+  boord. De wereldlijn is een hyperbool; de hoek uit het optellen van
+  snelheden groeit gelijkmatig met de eigen tijd. Drie lagen: **Berichten**
+  van thuis (wat na 1/a vertrekt haalt de raket nooit in: de horizon), **Nu van
+  de raket** (die lijn draait om één vast punt, zodat de aardklok voor de raket
+  bevriest), en **Twee raketten** met een touw ertussen dat breekt. Getekend in
+  eenheden van 1/a: het plaatje is voor elke versnelling hetzelfde, alleen de
+  maten in jaren en lichtjaren veranderen.
 - **Epstein-cirkel** (`epstein.js`) — twee delen. **De pijl**: de kwartcirkel
   waarin ruimte en tijd samen altijd c opleveren. **De tweeling**: dezelfde
   pijl tien jaar lang gevolgd, met plaats opzij en eigen tijd omhoog. Elk pad

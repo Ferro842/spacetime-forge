@@ -114,6 +114,24 @@ export function invarianteMassa(E, p) {
   return Math.sqrt(Math.max(0, E * E - p * p));
 }
 
+/** Eén g, de valversnelling op aarde, in lichtjaar per jaar kwadraat. Dat is
+ *  toevallig bijna 1: een jaar lang 1 g brengt je in de buurt van c. */
+export const G_LJ_PER_JAAR2 = 9.80665 * 31557600 / C_MS;
+
+/** Een raket die vanuit stilstand een constante versnelling a voelt (gemeten
+ *  aan boord), na een eigen tijd tau. Geeft tijd en plaats in het kader van
+ *  vertrek, de snelheid en gamma. De hoek a*tau groeit gelijkmatig; de
+ *  wereldlijn is een hyperbool. c = 1. */
+export function hyperbolischeBeweging(a, tau) {
+  const hoek = a * tau;
+  return {
+    t: Math.sinh(hoek) / a,
+    x: (Math.cosh(hoek) - 1) / a,
+    beta: Math.tanh(hoek),
+    gamma: Math.cosh(hoek),
+  };
+}
+
 /** Lichtsnelheid in kilometers per microseconde, voor de muonen. */
 export const C_KM_PER_US = C_MS / 1e9;
 

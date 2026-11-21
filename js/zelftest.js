@@ -135,6 +135,20 @@ function natuurkunde() {
 
 // Controles voor modules die later zijn toegevoegd komen hier bij
 function aanvullendeNatuurkunde() {
+  // Versnellen: hyperbool om een vast punt, en een horizon
+  let nv = 0, mv = 0;
+  for (let a = 0.2; a <= 2.01; a += 0.3) for (let tau = 0.1; tau * a <= 2.9; tau += 0.3) {
+    nv++;
+    const r = F.hyperbolischeBeweging(a, tau), r2 = F.hyperbolischeBeweging(a, tau + 1e-6);
+    if (!bijna(Math.pow(r.x + 1 / a, 2) - r.t * r.t, 1 / (a * a))) mv++;          // hyperbool om (-1/a, 0)
+    if (Math.abs((r2.x - r.x) / (r2.t - r.t) - r.beta) > 1e-5) mv++;              // snelheid is de helling
+    if (!bijna(r.beta, F.snelheidBijRapiditeit(a * tau))) mv++;                    // de hoek groeit gelijkmatig
+    if (!bijna(F.gelijktijdigOp(r.t, r.x, r.beta), r.beta / a)) mv++;              // zijn nu op aarde blijft onder 1/a
+    const tk = 0.5 / a, h = -Math.log(1 - a * tk);                                  // een bericht van voor de horizon
+    const aankomst = F.hyperbolischeBeweging(a, h / a);
+    if (!bijna(aankomst.t - tk, aankomst.x)) mv++;                                  // het licht haalt hem daar in
+  }
+  regel(mv === 0, 'Versnellen: hyperbool om een vast punt, nu-lijn blijft onder 1/a, berichten komen aan waar het hoort', nv + ' gevallen');
   // Energie en impuls: de massa is in elk kader dezelfde, ook die van een som
   let ne = 0, me = 0;
   for (let b = 0; b < 0.91; b += 0.1) for (let k = -0.6; k < 0.61; k += 0.2) {
