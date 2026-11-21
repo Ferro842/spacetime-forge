@@ -13,6 +13,7 @@ export const onderschrift =
 // zelftest controleert dat elke module hier voorkomt en andersom.
 export const route = [
   { id: 'lichtklok', naam: 'Lichtklok-afleiding', leert: 'waarom een bewegende klok trager tikt' },
+  { id: 'muonen', naam: 'Muonen: het bewijs', leert: 'het bewijs uit de atmosfeer' },
   { id: 'gelijktijdig', naam: 'Gelijktijdigheid', leert: 'tegelijk is niet voor iedereen tegelijk' },
   { id: 'minkowski', naam: 'Minkowski-diagram', leert: 'levenslopen op \u00e9\u00e9n kaart' },
   { id: 'minkowski-pro', naam: 'Minkowski-diagram Pro', leert: 'de maatlat van de ruimtetijd' },

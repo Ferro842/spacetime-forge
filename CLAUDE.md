@@ -184,6 +184,12 @@ elk bestand hoeft te openen.
 - **Lichtklok-afleiding** (`lichtklok.js`) — vier tabbladen: Pythagoras naar Δt,
   de horizontale lichtklok naar L, de twee-rulers-figuur uit Einsteins boek, en
   de ijk-hyperbolen.
+- **Muonen: het bewijs** (`muonen.js`) — deeltjes die hoog in de lucht ontstaan
+  en te kort leven om de grond te halen, en hem toch halen. Links de aarde
+  (lange val, trage klok), rechtsboven het muon (gewone klok, dunne lucht), op
+  dezelfde schaal in kilometers. Een teller van elke 1000 en een grafiek van
+  wie er onderweg nog leeft, met en zonder relativiteit. Afstanden in km,
+  tijden in microseconden. Het enige stuk van de app dat over een meting gaat.
 - **Gelijktijdigheid** (`gelijktijdigheid.js`) — de trein met de lichtflits, in
   drie banden. Aankomsten kleuren mee met wie er al langs is, twee tikreeksen op
   de ct′-as (rond getal van de klok, en dezelfde hoogte als de perrontik), de

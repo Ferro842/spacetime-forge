@@ -135,6 +135,18 @@ function natuurkunde() {
 
 // Controles voor modules die later zijn toegevoegd komen hier bij
 function aanvullendeNatuurkunde() {
+  // Muonen: de eigen tijd van de val is in beide verhalen dezelfde
+  let n = 0, mis = 0;
+  for (let g = 1.5; g <= 40; g += 2.5) for (let H = 1; H <= 20; H += 3) {
+    n++;
+    const b = F.betaBijGamma(g), c = F.C_KM_PER_US;
+    if (!bijna(F.gamma(b), g)) mis++;
+    const aarde = (H / (b * c)) / g;          // lange val, trage klok
+    const muon = (H / g) / (b * c);           // dunne lucht, gewone klok
+    if (!bijna(aarde, muon)) mis++;
+    if (!bijna(F.overleving(2 * aarde, 2.2), Math.pow(F.overleving(aarde, 2.2), 2))) mis++;
+  }
+  regel(mis === 0, 'Muonen: trage klok en dunne lucht geven dezelfde eigen tijd', n + ' gevallen');
 }
 
 // --- 2. Bestanden --------------------------------------------------------------

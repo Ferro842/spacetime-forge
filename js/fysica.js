@@ -97,6 +97,24 @@ export function lichtHaaltIn(voorsprong, beta) {
   return { t: t, x: t };
 }
 
+/** Lichtsnelheid in kilometers per microseconde, voor de muonen. */
+export const C_KM_PER_US = C_MS / 1e9;
+
+/** Gemiddelde levensduur van een muon in rust, in microseconden. */
+export const MUON_LEVENSDUUR_US = 2.1969811;
+
+/** De snelheid (als fractie van c) die bij een lorentzfactor hoort. */
+export function betaBijGamma(g) {
+  return Math.sqrt(1 - 1 / (g * g));
+}
+
+/** Welk deel van een groep instabiele deeltjes nog bestaat nadat er op hun
+ *  eigen klok een tijd verstreken is; levensduur is de gemiddelde levensduur
+ *  in rust, in dezelfde eenheid. */
+export function overleving(eigenTijd, levensduur) {
+  return Math.exp(-eigenTijd / levensduur);
+}
+
 /** Relativistische dopplerfactor. naderend = true geeft blauwverschuiving. */
 export function doppler(beta, naderend = true) {
   const g = gamma(beta); // valideert beta
